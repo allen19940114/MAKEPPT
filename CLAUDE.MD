@@ -195,19 +195,33 @@ browser = await chromium.launch({
 ### 提交时机
 - 每个功能的所有测试通过后立即提交
 - 不要积攒多个功能再提交
+- **提交后必须立即推送到远程仓库**
 
-### 提交命令
+### 提交和推送命令（必须同时执行）
 ```bash
 git add .
 git commit -m "feat: F001 用户注册功能"
 git push origin main
 ```
 
+**重要**: 提交（commit）和推送（push）必须一起完成，不能只提交不推送！
+
 ### 提交信息格式
 - `feat: FXXX 功能名称` - 新功能
 - `fix: FXXX 修复描述` - Bug 修复
 - `refactor: 重构描述` - 代码重构
 - `test: 测试描述` - 测试相关
+
+### 验证推送成功
+提交后必须确认远程仓库已更新：
+```bash
+git status  # 应显示 "Your branch is up to date with 'origin/main'"
+```
+
+如果显示 "Your branch is ahead of 'origin/main'"，说明还没推送，必须执行：
+```bash
+git push origin main
+```
 
 ### 回滚失败的更改
 如果测试失败且无法修复：
@@ -229,6 +243,7 @@ git reset --hard <commit>     # 回滚到上一个成功的提交
 | ❌ 执行 `prisma migrate reset` | 会清空数据库，禁止执行 |
 | ❌ 删除 migrations 文件夹 | 会破坏数据库历史 |
 | ❌ 不提交就开始下一个功能 | Git 是你的"存档点"，必须保存 |
+| ❌ 只提交不推送到远程 | 远程仓库必须同步，否则代码不安全 |
 
 ---
 
