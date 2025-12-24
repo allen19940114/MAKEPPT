@@ -1,0 +1,213 @@
+{
+  "features": [
+    {
+      "id": "F001",
+      "name": "HTML文件上传与解析",
+      "priority": 1,
+      "description": "支持上传HTML文件或粘贴HTML代码，解析DOM结构",
+      "implemented": true,
+      "implementation_notes": "使用 DOMParser 解析 HTML，支持拖放上传和代码粘贴，自动识别幻灯片结构",
+      "implemented_at": "2024-12-24",
+      "test_steps": {
+        "code_tests": [
+          { "id": "F001-C1", "description": "正确解析HTML字符串为DOM", "passed": true },
+          { "id": "F001-C2", "description": "识别幻灯片分隔标记", "passed": true }
+        ],
+        "browser_tests": [
+          { "id": "F001-B1", "description": "文件上传功能正常", "passed": true },
+          { "id": "F001-B2", "description": "代码粘贴功能正常", "passed": true }
+        ]
+      }
+    },
+    {
+      "id": "F002",
+      "name": "幻灯片结构识别",
+      "priority": 2,
+      "description": "自动识别HTML中的幻灯片结构（section、div等），提取每页内容",
+      "implemented": true,
+      "implementation_notes": "支持 section, .slide, .page, [data-slide], .swiper-slide 等多种选择器",
+      "implemented_at": "2024-12-24",
+      "test_steps": {
+        "code_tests": [
+          { "id": "F002-C1", "description": "识别section标签分隔的幻灯片", "passed": true },
+          { "id": "F002-C2", "description": "识别class标记的幻灯片", "passed": true },
+          { "id": "F002-C3", "description": "提取幻灯片标题和内容", "passed": true }
+        ],
+        "browser_tests": [
+          { "id": "F002-B1", "description": "预览识别的幻灯片结构", "passed": true }
+        ]
+      }
+    },
+    {
+      "id": "F003",
+      "name": "文本样式转换",
+      "priority": 3,
+      "description": "将CSS文本样式（字体、大小、颜色、粗细等）转换为PPT格式",
+      "implemented": true,
+      "implementation_notes": "StyleConverter 类处理字体、大小、颜色、粗体、斜体、下划线等样式转换",
+      "implemented_at": "2024-12-24",
+      "test_steps": {
+        "code_tests": [
+          { "id": "F003-C1", "description": "转换字体家族", "passed": true },
+          { "id": "F003-C2", "description": "转换字体大小(px/em/rem)", "passed": true },
+          { "id": "F003-C3", "description": "转换颜色(hex/rgb/rgba)", "passed": true },
+          { "id": "F003-C4", "description": "转换粗体/斜体/下划线", "passed": true }
+        ],
+        "browser_tests": []
+      }
+    },
+    {
+      "id": "F004",
+      "name": "布局转换",
+      "priority": 4,
+      "description": "将CSS布局（flex、grid、定位）转换为PPT元素位置",
+      "implemented": true,
+      "implementation_notes": "使用 getBoundingClientRect 获取元素位置，按比例转换为 PPT 坐标",
+      "implemented_at": "2024-12-24",
+      "test_steps": {
+        "code_tests": [
+          { "id": "F004-C1", "description": "计算元素绝对位置", "passed": true },
+          { "id": "F004-C2", "description": "转换百分比布局", "passed": true },
+          { "id": "F004-C3", "description": "处理flex布局", "passed": true }
+        ],
+        "browser_tests": []
+      }
+    },
+    {
+      "id": "F005",
+      "name": "背景样式转换",
+      "priority": 5,
+      "description": "转换背景颜色、渐变、背景图片",
+      "implemented": true,
+      "implementation_notes": "支持纯色背景、线性渐变、背景图片的转换",
+      "implemented_at": "2024-12-24",
+      "test_steps": {
+        "code_tests": [
+          { "id": "F005-C1", "description": "转换纯色背景", "passed": true },
+          { "id": "F005-C2", "description": "转换线性渐变", "passed": true },
+          { "id": "F005-C3", "description": "转换背景图片", "passed": true }
+        ],
+        "browser_tests": []
+      }
+    },
+    {
+      "id": "F006",
+      "name": "图片处理",
+      "priority": 6,
+      "description": "提取并嵌入HTML中的图片到PPT",
+      "implemented": true,
+      "implementation_notes": "支持 URL 图片和 Base64 图片，自动保持比例",
+      "implemented_at": "2024-12-24",
+      "test_steps": {
+        "code_tests": [
+          { "id": "F006-C1", "description": "提取img标签图片", "passed": true },
+          { "id": "F006-C2", "description": "处理base64图片", "passed": true },
+          { "id": "F006-C3", "description": "保持图片比例", "passed": true }
+        ],
+        "browser_tests": []
+      }
+    },
+    {
+      "id": "F007",
+      "name": "动画效果转换",
+      "priority": 7,
+      "description": "将CSS动画/transition转换为PPT动画效果",
+      "implemented": true,
+      "implementation_notes": "AnimationConverter 支持 fadeIn, slideIn, zoomIn 等动画映射到 PPT 入场/强调/退出动画",
+      "implemented_at": "2024-12-24",
+      "test_steps": {
+        "code_tests": [
+          { "id": "F007-C1", "description": "识别CSS animation", "passed": true },
+          { "id": "F007-C2", "description": "识别CSS transition", "passed": true },
+          { "id": "F007-C3", "description": "映射到PPT入场动画", "passed": true }
+        ],
+        "browser_tests": []
+      }
+    },
+    {
+      "id": "F008",
+      "name": "PPT文件生成",
+      "priority": 8,
+      "description": "生成可直接用Microsoft PowerPoint打开的.pptx文件",
+      "implemented": true,
+      "implementation_notes": "使用 PptxGenJS 生成标准 OOXML 格式的 .pptx 文件",
+      "implemented_at": "2024-12-24",
+      "test_steps": {
+        "code_tests": [
+          { "id": "F008-C1", "description": "生成有效的PPTX文件", "passed": true },
+          { "id": "F008-C2", "description": "文件可被解压验证结构", "passed": true }
+        ],
+        "browser_tests": [
+          { "id": "F008-B1", "description": "下载按钮触发文件下载", "passed": true }
+        ]
+      }
+    },
+    {
+      "id": "F009",
+      "name": "Web界面",
+      "priority": 9,
+      "description": "提供用户友好的Web界面进行转换操作",
+      "implemented": true,
+      "implementation_notes": "响应式设计，支持拖放上传、实时预览、选项配置",
+      "implemented_at": "2024-12-24",
+      "test_steps": {
+        "code_tests": [],
+        "browser_tests": [
+          { "id": "F009-B1", "description": "页面正确渲染", "passed": true },
+          { "id": "F009-B2", "description": "上传区域可拖拽", "passed": true },
+          { "id": "F009-B3", "description": "预览功能正常", "passed": true },
+          { "id": "F009-B4", "description": "转换按钮可点击", "passed": true }
+        ]
+      }
+    },
+    {
+      "id": "F010",
+      "name": "表格转换",
+      "priority": 10,
+      "description": "将HTML表格转换为PPT表格",
+      "implemented": true,
+      "implementation_notes": "解析 table/tr/td/th 结构，支持合并单元格和单元格样式",
+      "implemented_at": "2024-12-24",
+      "test_steps": {
+        "code_tests": [
+          { "id": "F010-C1", "description": "提取表格行列结构", "passed": true },
+          { "id": "F010-C2", "description": "保留单元格样式", "passed": true }
+        ],
+        "browser_tests": []
+      }
+    },
+    {
+      "id": "F011",
+      "name": "列表转换",
+      "priority": 11,
+      "description": "将HTML列表(ul/ol)转换为PPT列表",
+      "implemented": true,
+      "implementation_notes": "支持有序列表、无序列表和嵌套列表",
+      "implemented_at": "2024-12-24",
+      "test_steps": {
+        "code_tests": [
+          { "id": "F011-C1", "description": "转换有序列表", "passed": true },
+          { "id": "F011-C2", "description": "转换无序列表", "passed": true },
+          { "id": "F011-C3", "description": "处理嵌套列表", "passed": true }
+        ],
+        "browser_tests": []
+      }
+    },
+    {
+      "id": "F012",
+      "name": "形状转换",
+      "priority": 12,
+      "description": "将CSS形状(border-radius等)转换为PPT形状",
+      "implemented": true,
+      "implementation_notes": "根据 border-radius 判断圆形/圆角矩形，转换为 PPT 对应形状",
+      "implemented_at": "2024-12-24",
+      "test_steps": {
+        "code_tests": [
+          { "id": "F012-C1", "description": "转换圆形/椭圆", "passed": true },
+          { "id": "F012-C2", "description": "转换圆角矩形", "passed": true }
+        ],
+        "browser_tests": []
+      }
+    }
+  ]
+}

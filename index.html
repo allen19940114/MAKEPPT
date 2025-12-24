@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTML to PPT Converter</title>
+  <link rel="stylesheet" href="src/styles/main.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- 头部 -->
+    <header class="header">
+      <div class="header-content">
+        <h1 class="logo">
+          <span class="logo-icon">📊</span>
+          HTML to PPT
+        </h1>
+        <p class="tagline">将 HTML 演示文稿转换为 PowerPoint 格式</p>
+      </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+      <!-- 上传区域 -->
+      <section class="upload-section">
+        <div class="upload-area" id="dropZone">
+          <div class="upload-icon">📄</div>
+          <h2>拖放 HTML 文件到此处</h2>
+          <p>或者</p>
+          <label class="upload-btn">
+            <input type="file" id="fileInput" accept=".html,.htm" hidden>
+            选择文件
+          </label>
+          <p class="upload-hint">支持 .html 和 .htm 文件</p>
+        </div>
+
+        <div class="divider">
+          <span>或粘贴 HTML 代码</span>
+        </div>
+
+        <div class="code-input-area">
+          <textarea
+            id="htmlInput"
+            placeholder="在此粘贴 HTML 代码...
+
+示例:
+<section>
+  <h1>第一页幻灯片</h1>
+  <p>内容介绍</p>
+</section>
+<section>
+  <h2>第二页</h2>
+  <ul>
+    <li>要点一</li>
+    <li>要点二</li>
+  </ul>
+</section>"
+          ></textarea>
+        </div>
+      </section>
+
+      <!-- 预览区域 -->
+      <section class="preview-section" id="previewSection" style="display: none;">
+        <div class="preview-header">
+          <h2>预览</h2>
+          <span class="slide-count" id="slideCount">0 张幻灯片</span>
+        </div>
+        <div class="preview-container" id="previewContainer">
+          <!-- 幻灯片预览将在这里动态生成 -->
+        </div>
+      </section>
+
+      <!-- 选项区域 -->
+      <section class="options-section" id="optionsSection" style="display: none;">
+        <h3>转换选项</h3>
+        <div class="options-grid">
+          <div class="option-group">
+            <label for="pptTitle">演示文稿标题</label>
+            <input type="text" id="pptTitle" placeholder="My Presentation">
+          </div>
+          <div class="option-group">
+            <label for="pptAuthor">作者</label>
+            <input type="text" id="pptAuthor" placeholder="Your Name">
+          </div>
+          <div class="option-group">
+            <label>
+              <input type="checkbox" id="preserveAnimations" checked>
+              保留动画效果
+            </label>
+          </div>
+          <div class="option-group">
+            <label>
+              <input type="checkbox" id="preserveStyles" checked>
+              保留样式
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- 操作按钮 -->
+      <section class="action-section" id="actionSection" style="display: none;">
+        <button class="btn btn-primary" id="convertBtn">
+          <span class="btn-icon">⬇️</span>
+          转换并下载 PPT
+        </button>
+        <button class="btn btn-secondary" id="resetBtn">
+          <span class="btn-icon">🔄</span>
+          重新开始
+        </button>
+      </section>
+
+      <!-- 状态提示 -->
+      <div class="status-bar" id="statusBar" style="display: none;">
+        <div class="status-content">
+          <span class="status-icon" id="statusIcon">⏳</span>
+          <span class="status-text" id="statusText">处理中...</span>
+        </div>
+        <div class="progress-bar" id="progressBar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+      <p>支持 Gemini Dynamic View HTML 格式 | 生成可直接用 Microsoft PowerPoint 打开的 .pptx 文件</p>
+    </footer>
+  </div>
+
+  <script type="module" src="src/index.js"></script>
+</body>
+</html>
