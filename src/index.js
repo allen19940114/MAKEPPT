@@ -21,7 +21,7 @@ class App {
     this.dropZone = document.getElementById('dropZone');
     this.fileInput = document.getElementById('fileInput');
     this.htmlInput = document.getElementById('htmlInput');
-    this.uploadBtn = document.querySelector('.upload-btn');
+    this.uploadBtn = document.getElementById('uploadBtn');
 
     // 预览相关
     this.previewSection = document.getElementById('previewSection');
@@ -74,16 +74,17 @@ class App {
       }
     });
 
-    // 点击上传按钮 - 阻止冒泡
+    // 点击上传按钮
     this.uploadBtn.addEventListener('click', (e) => {
+      e.preventDefault();
       e.stopPropagation();
       this.fileInput.click();
     });
 
     // 点击上传区域（非按钮区域）
     this.dropZone.addEventListener('click', (e) => {
-      // 如果点击的是按钮或其子元素，不触发
-      if (e.target.closest('.upload-btn')) {
+      // 如果点击的是按钮或 input，不触发
+      if (e.target.id === 'uploadBtn' || e.target.id === 'fileInput') {
         return;
       }
       this.fileInput.click();

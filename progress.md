@@ -93,6 +93,39 @@
 - 代码测试: ✅ 通过 (49/49)
 - 浏览器测试: ✅ 通过 (5/5)
 
+**Git 提交**: `52cc3a6` - fix: 修复文件上传和PPT生成进度显示问题
+
+---
+
+### [2024-12-25 00:30] - Session 3
+
+**当前功能**: 修复文件选择器问题
+
+**遇到的问题**:
+
+1. **点击"选择文件"按钮后选中文件确认，无任何反应**
+   - 原因: `<input type="file">` 放在 `<label>` 内部，点击 label 会自动触发 input。
+     同时 JS 又在 label 上绑定了 click 事件调用 `fileInput.click()`，
+     导致文件选择器被打开两次，第二次取消了第一次的选择
+   - 解决:
+     - 将 `<input>` 移出 `<label>`，改用独立的 `<button>` 元素
+     - 使用 `id="uploadBtn"` 替代 class 选择器
+     - 按钮点击时调用 `fileInput.click()` 打开文件选择器
+
+**修改内容**:
+
+1. `index.html`:
+   - 将 `<label class="upload-btn"><input...></label>` 改为 `<button id="uploadBtn">`
+   - `<input type="file">` 移到 dropZone 开头，独立存在
+
+2. `src/index.js`:
+   - `uploadBtn` 选择器从 `.upload-btn` 改为 `#uploadBtn`
+   - 事件判断条件更新为 `e.target.id === 'uploadBtn'`
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- 浏览器测试: ✅ 通过 (5/5)
+
 **Git 提交**: 待提交
 
-**下一步**: 提交代码
+**下一步**: 提交代码并推送到 GitHub

@@ -24,13 +24,11 @@
       <!-- 上传区域 -->
       <section class="upload-section">
         <div class="upload-area" id="dropZone">
+          <input type="file" id="fileInput" accept=".html,.htm" style="display:none;">
           <div class="upload-icon">📄</div>
           <h2>拖放 HTML 文件到此处</h2>
           <p>或者</p>
-          <label class="upload-btn">
-            <input type="file" id="fileInput" accept=".html,.htm" hidden>
-            选择文件
-          </label>
+          <button type="button" class="upload-btn" id="uploadBtn">选择文件</button>
           <p class="upload-hint">支持 .html 和 .htm 文件</p>
         </div>
 
