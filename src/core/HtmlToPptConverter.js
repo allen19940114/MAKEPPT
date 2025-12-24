@@ -11,9 +11,8 @@ import { AnimationConverter } from './AnimationConverter.js';
 export class HtmlToPptConverter {
   constructor(options = {}) {
     this.options = {
-      slideWidth: 10,
-      slideHeight: 7.5,
-      defaultFontFace: 'Microsoft YaHei',
+      aspectRatio: '16:9',
+      defaultFontFace: 'Arial',
       defaultFontSize: 18,
       preserveAnimations: true,
       ...options
@@ -22,7 +21,7 @@ export class HtmlToPptConverter {
     this.htmlParser = new HtmlParser();
     this.styleConverter = new StyleConverter();
     this.animationConverter = new AnimationConverter();
-    this.pptGenerator = new PptGenerator(this.options);
+    this.pptGenerator = null; // 延迟初始化，等待 aspectRatio 选项
   }
 
   /**
@@ -77,9 +76,10 @@ export class HtmlToPptConverter {
    * 渲染 HTML 并获取计算后的样式
    * 这个方法需要在浏览器环境中使用 iframe 进行渲染
    * @param {string} htmlString - HTML 内容
+   * @param {Object} options - 选项（包含 aspectRatio）
    * @returns {Promise<Array<SlideData>>} 带有计算样式的幻灯片数据
    */
-  async renderAndParse(htmlString) {
+  async renderAndParse(htmlString, options = {}) {
     return new Promise((resolve) => {
       // 创建隐藏的 iframe 来渲染 HTML
       const iframe = document.createElement('iframe');
@@ -97,11 +97,23 @@ export class HtmlToPptConverter {
           setTimeout(() => {
             const slides = this.htmlParser.extractSlides(iframeDoc);
 
-            // 更新容器尺寸
-            this.pptGenerator.setContainerSize(
+            // 创建临时的 PptGenerator 来计算缩放参数
+            const generatorOptions = {
+              ...this.options,
+              aspectRatio: options.aspectRatio || this.options.aspectRatio || '16:9'
+            };
+            const tempGenerator = new PptGenerator(generatorOptions);
+            tempGenerator.initPresentation();
+            tempGenerator.setContainerSize(
               iframe.contentWindow.innerWidth,
               iframe.contentWindow.innerHeight
             );
+
+            // 保存缩放参数供后续使用
+            this.lastContainerSize = {
+              width: iframe.contentWindow.innerWidth,
+              height: iframe.contentWindow.innerHeight
+            };
 
             document.body.removeChild(iframe);
             resolve(slides);
@@ -135,7 +147,24 @@ export class HtmlToPptConverter {
     const onProgress = options.onProgress || (() => {});
     const total = slides.length;
 
+    // 根据选项创建 PptGenerator（支持不同的长宽比）
+    const generatorOptions = {
+      ...this.options,
+      aspectRatio: options.aspectRatio || this.options.aspectRatio || '16:9'
+    };
+    this.pptGenerator = new PptGenerator(generatorOptions);
     this.pptGenerator.initPresentation(metadata);
+
+    // 设置容器尺寸用于等比例缩放
+    if (this.lastContainerSize) {
+      this.pptGenerator.setContainerSize(
+        this.lastContainerSize.width,
+        this.lastContainerSize.height
+      );
+    } else {
+      // 默认容器尺寸 (1920x1080 for 16:9)
+      this.pptGenerator.setContainerSize(1920, 1080);
+    }
 
     // 逐页生成并报告进度
     for (let i = 0; i < slides.length; i++) {
@@ -161,8 +190,8 @@ export class HtmlToPptConverter {
    * @returns {Promise<Blob>} PPT 文件 Blob
    */
   async convert(htmlString, options = {}) {
-    // 在浏览器环境中渲染并解析
-    const slides = await this.renderAndParse(htmlString);
+    // 在浏览器环境中渲染并解析（传递 aspectRatio 选项）
+    const slides = await this.renderAndParse(htmlString, options);
 
     // 生成 PPT
     return await this.generatePpt(slides, options);

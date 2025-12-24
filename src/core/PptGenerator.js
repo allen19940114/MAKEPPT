@@ -13,11 +13,24 @@ export class PptGenerator {
     this.styleConverter = new StyleConverter();
     this.animationConverter = new AnimationConverter();
 
+    // 预设的幻灯片尺寸 (英寸)
+    this.SLIDE_PRESETS = {
+      '16:9': { width: 13.333, height: 7.5, layout: 'LAYOUT_16x9' },
+      '4:3': { width: 10, height: 7.5, layout: 'LAYOUT_4x3' },
+      'wide': { width: 13.333, height: 7.5, layout: 'LAYOUT_WIDE' }
+    };
+
+    // 默认使用 16:9
+    const aspectRatio = options.aspectRatio || '16:9';
+    const preset = this.SLIDE_PRESETS[aspectRatio] || this.SLIDE_PRESETS['16:9'];
+
     // 配置选项
     this.options = {
-      slideWidth: options.slideWidth || 10,
-      slideHeight: options.slideHeight || 7.5,
-      defaultFontFace: options.defaultFontFace || 'Microsoft YaHei',
+      slideWidth: options.slideWidth || preset.width,
+      slideHeight: options.slideHeight || preset.height,
+      slideLayout: preset.layout,
+      aspectRatio: aspectRatio,
+      defaultFontFace: options.defaultFontFace || 'Arial',
       defaultFontSize: options.defaultFontSize || 18,
       ...options
     };
@@ -27,6 +40,11 @@ export class PptGenerator {
       width: 1920,
       height: 1080
     };
+
+    // 缩放参数
+    this.scale = 1;
+    this.offsetX = 0;
+    this.offsetY = 0;
   }
 
   /**
@@ -37,24 +55,47 @@ export class PptGenerator {
     this.pptx = new pptxgen();
 
     // 设置演示文稿属性
-    this.pptx.layout = 'LAYOUT_16x9';
+    this.pptx.layout = this.options.slideLayout;
     this.pptx.author = metadata.author || 'HTML to PPT Converter';
     this.pptx.title = metadata.title || 'Converted Presentation';
     this.pptx.subject = metadata.subject || '';
     this.pptx.company = metadata.company || '';
+
+    // 更新样式转换器的幻灯片尺寸
+    this.styleConverter.slideWidth = this.options.slideWidth;
+    this.styleConverter.slideHeight = this.options.slideHeight;
 
     return this;
   }
 
   /**
    * 设置容器尺寸 (用于计算相对位置)
-   * @param {number} width - 宽度
-   * @param {number} height - 高度
+   * 计算等比例缩放参数，保持 HTML 原始布局比例
+   * @param {number} width - 容器宽度 (像素)
+   * @param {number} height - 容器高度 (像素)
    */
   setContainerSize(width, height) {
     this.containerSize = { width, height };
+
+    // 计算缩放比例，保持宽高比
+    const scaleX = this.options.slideWidth / width;
+    const scaleY = this.options.slideHeight / height;
+
+    // 使用较小的缩放比例，确保内容不会超出幻灯片
+    this.scale = Math.min(scaleX, scaleY);
+
+    // 计算居中偏移
+    const scaledWidth = width * this.scale;
+    const scaledHeight = height * this.scale;
+    this.offsetX = (this.options.slideWidth - scaledWidth) / 2;
+    this.offsetY = (this.options.slideHeight - scaledHeight) / 2;
+
+    // 更新样式转换器
     this.styleConverter.slideWidth = this.options.slideWidth;
     this.styleConverter.slideHeight = this.options.slideHeight;
+    this.styleConverter.scale = this.scale;
+    this.styleConverter.offsetX = this.offsetX;
+    this.styleConverter.offsetY = this.offsetY;
   }
 
   /**
@@ -185,16 +226,20 @@ export class PptGenerator {
     const textStyles = this.styleConverter.convertTextStyles(element.styles);
     const shapeStyles = this.styleConverter.convertShapeStyles(element.styles);
 
-    // 构建文本配置
+    // 构建文本配置 - 禁用自动换行和自动缩放
     const textOptions = {
       x: position.x,
       y: position.y,
-      w: position.w || 'auto',
-      h: position.h || 'auto',
+      w: position.w > 0 ? position.w : 2,
+      h: position.h > 0 ? position.h : 0.5,
       ...textStyles,
       ...shapeStyles,
-      valign: 'middle',
-      wrap: true
+      valign: 'top',
+      wrap: false,           // 禁用自动换行
+      shrinkText: false,     // 禁用文本自动缩放
+      fit: 'none',           // 不自动调整文本框大小
+      autoFit: false,        // 禁用自动适配
+      isTextBox: true        // 明确标记为文本框
     };
 
     // 根据标题级别调整字号

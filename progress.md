@@ -157,6 +157,73 @@
 - 代码测试: ✅ 通过 (49/49)
 - 浏览器测试: ✅ 通过 (5/5)
 
+**Git 提交**: `2a5bcbe` - fix: 修复 blob URL 图片加载失败问题
+
+**下一步**: 用户手动测试 Gemini Dynamic View HTML 转换
+
+---
+
+### [2024-12-25 10:30] - Session 5
+
+**当前功能**: 修复 PPT 显示效果问题
+
+**遇到的问题**:
+
+1. **文字排版混乱**
+   - 原因: 文本框使用了 `w: 'auto', h: 'auto'` 和 `wrap: true`
+   - 导致 PowerPoint 自动调整文本框大小和换行
+
+2. **字体不正确**
+   - 原因: 默认字体 "Microsoft YaHei" 在某些系统不存在
+   - 字体映射不够完整
+
+3. **位置计算不准确**
+   - 原因: 只使用单一缩放比例，没有考虑居中偏移
+   - 没有保持 HTML 原始布局的等比例变形
+
+4. **缺少长宽比选项**
+   - 原因: 只支持默认的 16:9 布局
+
+**解决方案**:
+
+1. `src/core/PptGenerator.js`:
+   - 添加预设幻灯片尺寸 `SLIDE_PRESETS` (16:9, 4:3, wide)
+   - 添加 `aspectRatio` 选项支持
+   - 禁用文本框自动换行和缩放: `wrap: false, shrinkText: false, fit: 'none', autoFit: false`
+   - 使用固定尺寸文本框而非 `'auto'`
+   - 添加 `scale`, `offsetX`, `offsetY` 缩放参数
+   - 在 `setContainerSize()` 中计算等比例缩放和居中偏移
+
+2. `src/core/StyleConverter.js`:
+   - 扩展字体映射，添加更多跨平台字体
+   - 默认字体改为 "Arial"（更通用）
+   - 添加 `scale`, `offsetX`, `offsetY` 属性
+   - `calculatePosition()` 使用等比例缩放 + 居中偏移
+
+3. `src/core/HtmlToPptConverter.js`:
+   - 支持 `aspectRatio` 选项传递
+   - 保存容器尺寸 `lastContainerSize` 供生成时使用
+   - 延迟初始化 `pptGenerator`
+
+4. `index.html`:
+   - 添加幻灯片比例选择器 `<select id="aspectRatio">`
+
+5. `src/index.js`:
+   - 添加 `aspectRatio` 元素引用
+   - 在转换选项中传递 `aspectRatio`
+
+**修改内容**:
+
+- `src/core/PptGenerator.js`: 添加长宽比预设、缩放参数、禁用自动换行
+- `src/core/StyleConverter.js`: 扩展字体映射、改进位置计算
+- `src/core/HtmlToPptConverter.js`: 支持 aspectRatio 选项
+- `index.html`: 添加比例选择器
+- `src/index.js`: 传递 aspectRatio 选项
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- 浏览器测试: ✅ 通过 (5/5)
+
 **Git 提交**: 待提交
 
-**下一步**: 提交代码并推送到 GitHub
+**下一步**: 用户手动测试验证 PPT 显示效果改进

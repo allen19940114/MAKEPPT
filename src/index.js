@@ -30,6 +30,7 @@ class App {
 
     // 选项相关
     this.optionsSection = document.getElementById('optionsSection');
+    this.aspectRatio = document.getElementById('aspectRatio');
     this.pptTitle = document.getElementById('pptTitle');
     this.pptAuthor = document.getElementById('pptAuthor');
     this.preserveAnimations = document.getElementById('preserveAnimations');
@@ -255,9 +256,11 @@ class App {
       this.showLogSection();
       this.log('info', '开始 PPT 生成流程...');
 
+      const aspectRatio = this.aspectRatio.value || '16:9';
       const options = {
         title: this.pptTitle.value || 'Presentation',
         author: this.pptAuthor.value || '',
+        aspectRatio: aspectRatio,
         preserveAnimations: this.preserveAnimations.checked,
         preserveStyles: this.preserveStyles.checked,
         // 添加进度回调
@@ -268,7 +271,7 @@ class App {
         }
       };
 
-      this.log('info', `配置: 标题="${options.title}", 作者="${options.author}"`);
+      this.log('info', `配置: 标题="${options.title}", 作者="${options.author}", 比例=${aspectRatio}`);
       this.log('info', `配置: 保留动画=${options.preserveAnimations}, 保留样式=${options.preserveStyles}`);
 
       this.updateProgress(5, '初始化...');

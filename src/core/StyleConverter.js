@@ -6,26 +6,41 @@
 export class StyleConverter {
   constructor() {
     // PPT 标准尺寸 (英寸)
-    this.slideWidth = 10;
+    this.slideWidth = 13.333;  // 16:9 默认宽度
     this.slideHeight = 7.5;
 
     // 默认 DPI
     this.dpi = 96;
 
-    // 字体映射
+    // 缩放参数 (由 PptGenerator 设置)
+    this.scale = 1;
+    this.offsetX = 0;
+    this.offsetY = 0;
+
+    // 字体映射 - 优先使用跨平台字体
     this.fontMap = {
+      // 无衬线字体 (Sans-serif)
       'Arial': 'Arial',
       'Helvetica': 'Arial',
+      'Helvetica Neue': 'Arial',
+      '-apple-system': 'Arial',
+      'BlinkMacSystemFont': 'Arial',
+      'Segoe UI': 'Arial',
+      'Roboto': 'Arial',
+      'sans-serif': 'Arial',
+      // 衬线字体 (Serif)
       'Times New Roman': 'Times New Roman',
       'Times': 'Times New Roman',
       'Georgia': 'Georgia',
+      'serif': 'Times New Roman',
+      // 等宽字体 (Monospace)
       'Verdana': 'Verdana',
       'Courier New': 'Courier New',
       'Courier': 'Courier New',
       'monospace': 'Courier New',
-      'sans-serif': 'Arial',
-      'serif': 'Times New Roman',
-      // 中文字体
+      'Consolas': 'Courier New',
+      'Monaco': 'Courier New',
+      // 中文字体 - 映射到通用中文字体
       'Microsoft YaHei': 'Microsoft YaHei',
       '微软雅黑': 'Microsoft YaHei',
       'SimHei': 'SimHei',
@@ -33,7 +48,10 @@ export class StyleConverter {
       'SimSun': 'SimSun',
       '宋体': 'SimSun',
       'PingFang SC': 'PingFang SC',
-      'Hiragino Sans GB': 'Hiragino Sans GB'
+      'Hiragino Sans GB': 'Hiragino Sans GB',
+      'STHeiti': 'SimHei',
+      'Noto Sans SC': 'Microsoft YaHei',
+      'Source Han Sans SC': 'Microsoft YaHei'
     };
   }
 
@@ -290,18 +308,36 @@ export class StyleConverter {
 
   /**
    * 计算元素在幻灯片中的位置 (英寸)
+   * 使用等比例缩放，保持 HTML 原始布局
    * @param {Object} position - 位置数据 {x, y, width, height}
    * @param {Object} containerSize - 容器尺寸 {width, height}
    * @returns {Object} PPT 位置 {x, y, w, h}
    */
   calculatePosition(position, containerSize) {
+    // 如果已经设置了缩放参数，使用它们
+    if (this.scale && this.scale !== 1) {
+      return {
+        x: position.x * this.scale + this.offsetX,
+        y: position.y * this.scale + this.offsetY,
+        w: position.width * this.scale,
+        h: position.height * this.scale
+      };
+    }
+
+    // 否则计算新的缩放参数
     const scaleX = this.slideWidth / containerSize.width;
     const scaleY = this.slideHeight / containerSize.height;
     const scale = Math.min(scaleX, scaleY);
 
+    // 计算居中偏移
+    const scaledWidth = containerSize.width * scale;
+    const scaledHeight = containerSize.height * scale;
+    const offsetX = (this.slideWidth - scaledWidth) / 2;
+    const offsetY = (this.slideHeight - scaledHeight) / 2;
+
     return {
-      x: position.x * scale,
-      y: position.y * scale,
+      x: position.x * scale + offsetX,
+      y: position.y * scale + offsetY,
       w: position.width * scale,
       h: position.height * scale
     };
