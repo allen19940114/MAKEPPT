@@ -226,7 +226,7 @@ export class PptGenerator {
     const textStyles = this.styleConverter.convertTextStyles(element.styles);
     const shapeStyles = this.styleConverter.convertShapeStyles(element.styles);
 
-    // 构建文本配置 - 禁用自动换行和自动缩放
+    // 构建文本配置 - 保留换行但禁用自动缩放
     const textOptions = {
       x: position.x,
       y: position.y,
@@ -235,9 +235,8 @@ export class PptGenerator {
       ...textStyles,
       ...shapeStyles,
       valign: 'top',
-      wrap: false,           // 禁用自动换行
+      wrap: true,            // 启用换行以匹配原始布局
       shrinkText: false,     // 禁用文本自动缩放
-      fit: 'none',           // 不自动调整文本框大小
       autoFit: false,        // 禁用自动适配
       isTextBox: true        // 明确标记为文本框
     };

@@ -227,3 +227,63 @@
 **Git 提交**: `69fb18c` - fix: 改进 PPT 显示效果和排版质量
 
 **下一步**: 用户手动测试验证 PPT 显示效果改进
+
+---
+
+### [2024-12-25 11:30] - Session 6
+
+**当前功能**: 修复文本换行问题 + 添加双排对比预览
+
+**遇到的问题**:
+
+1. **文字不换行**
+   - 原因: 上一次修复错误地设置了 `wrap: false`
+   - 应该保留换行以匹配原始布局
+
+2. **缺少预览对比功能**
+   - 用户无法在下载前比较 HTML 原始效果和 PPT 预览效果
+   - 需要双排嵌入式对比窗口
+
+**解决方案**:
+
+1. `src/core/PptGenerator.js`:
+   - 将 `wrap: false` 改回 `wrap: true`
+   - 移除 `fit: 'none'` 选项
+
+2. `index.html`:
+   - 添加双排对比预览区域 `#compareSection`
+   - 左侧: HTML 原始预览 (iframe)
+   - 右侧: PPT 模拟预览
+   - 添加幻灯片导航按钮（上一页/下一页）
+
+3. `src/styles/main.css`:
+   - 添加 `.compare-section` 样式
+   - 添加 `.compare-container` 双列布局
+   - 添加 `.compare-panel` 面板样式
+   - 添加导航按钮样式
+   - 添加响应式布局（移动端竖排）
+
+4. `src/index.js`:
+   - 添加 `currentSlideIndex`, `slidesHtml` 状态
+   - 添加双排预览相关元素引用
+   - 添加 `initComparePreview()` 初始化方法
+   - 添加 `extractSlidesHtml()` 提取幻灯片方法
+   - 添加 `updateComparePreview()` 更新预览方法
+   - 添加 `renderPptPreview()` 渲染 PPT 预览方法
+   - 添加 `navigateSlide()` 导航方法
+   - 添加 `updateNavButtons()` 更新按钮状态
+
+**修改内容**:
+
+- `src/core/PptGenerator.js`: 修复文本换行设置
+- `index.html`: 添加双排对比预览区域
+- `src/styles/main.css`: 添加对比预览样式
+- `src/index.js`: 添加双排预览和导航功能
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- 浏览器测试: ✅ 通过 (5/5)
+
+**Git 提交**: 待提交 - feat: 添加双排对比预览功能 + 修复文本换行
+
+**下一步**: 用户手动测试验证双排对比预览功能

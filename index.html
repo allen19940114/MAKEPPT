@@ -57,11 +57,45 @@
         </div>
       </section>
 
-      <!-- 预览区域 -->
+      <!-- 双排对比预览区域 -->
+      <section class="compare-section" id="compareSection" style="display: none;">
+        <div class="compare-header">
+          <h2>预览对比</h2>
+          <span class="slide-count" id="slideCount">0 张幻灯片</span>
+          <div class="slide-nav">
+            <button class="nav-btn" id="prevSlideBtn" disabled>◀ 上一页</button>
+            <span class="slide-indicator" id="slideIndicator">1 / 1</span>
+            <button class="nav-btn" id="nextSlideBtn" disabled>下一页 ▶</button>
+          </div>
+        </div>
+        <div class="compare-container">
+          <!-- HTML 原始预览 -->
+          <div class="compare-panel">
+            <div class="panel-header">
+              <span class="panel-title">HTML 原始效果</span>
+            </div>
+            <div class="panel-content" id="htmlPreviewPanel">
+              <iframe id="htmlPreviewFrame" sandbox="allow-same-origin"></iframe>
+            </div>
+          </div>
+          <!-- PPT 模拟预览 -->
+          <div class="compare-panel">
+            <div class="panel-header">
+              <span class="panel-title">PPT 预览效果</span>
+            </div>
+            <div class="panel-content" id="pptPreviewPanel">
+              <div class="ppt-preview" id="pptPreviewCanvas">
+                <!-- PPT 模拟预览将在这里渲染 -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 幻灯片缩略图区域 -->
       <section class="preview-section" id="previewSection" style="display: none;">
         <div class="preview-header">
-          <h2>预览</h2>
-          <span class="slide-count" id="slideCount">0 张幻灯片</span>
+          <h2>幻灯片缩略图</h2>
         </div>
         <div class="preview-container" id="previewContainer">
           <!-- 幻灯片预览将在这里动态生成 -->

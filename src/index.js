@@ -10,6 +10,8 @@ class App {
     this.currentHtml = '';
     this.previewData = [];
     this.logs = [];
+    this.currentSlideIndex = 0;
+    this.slidesHtml = [];  // 存储每张幻灯片的 HTML
 
     this.initElements();
     this.bindEvents();
@@ -27,6 +29,14 @@ class App {
     this.previewSection = document.getElementById('previewSection');
     this.previewContainer = document.getElementById('previewContainer');
     this.slideCount = document.getElementById('slideCount');
+
+    // 双排对比预览相关
+    this.compareSection = document.getElementById('compareSection');
+    this.htmlPreviewFrame = document.getElementById('htmlPreviewFrame');
+    this.pptPreviewCanvas = document.getElementById('pptPreviewCanvas');
+    this.prevSlideBtn = document.getElementById('prevSlideBtn');
+    this.nextSlideBtn = document.getElementById('nextSlideBtn');
+    this.slideIndicator = document.getElementById('slideIndicator');
 
     // 选项相关
     this.optionsSection = document.getElementById('optionsSection');
@@ -127,6 +137,14 @@ class App {
         this.logContainer.classList.toggle('collapsed');
         this.logToggle.textContent = this.logContainer.classList.contains('collapsed') ? '展开' : '收起';
       });
+    }
+
+    // 幻灯片导航按钮
+    if (this.prevSlideBtn) {
+      this.prevSlideBtn.addEventListener('click', () => this.navigateSlide(-1));
+    }
+    if (this.nextSlideBtn) {
+      this.nextSlideBtn.addEventListener('click', () => this.navigateSlide(1));
     }
   }
 
@@ -230,15 +248,203 @@ class App {
   }
 
   showSections() {
+    this.compareSection.style.display = 'block';
     this.previewSection.style.display = 'block';
     this.optionsSection.style.display = 'block';
     this.actionSection.style.display = 'flex';
 
     // 添加动画效果
-    [this.previewSection, this.optionsSection, this.actionSection].forEach((section, index) => {
+    [this.compareSection, this.previewSection, this.optionsSection, this.actionSection].forEach((section, index) => {
       section.classList.add('fade-in');
       section.style.animationDelay = `${index * 0.1}s`;
     });
+
+    // 初始化双排预览
+    this.initComparePreview();
+  }
+
+  // 初始化双排对比预览
+  initComparePreview() {
+    if (this.previewData.length === 0) return;
+
+    this.currentSlideIndex = 0;
+    this.extractSlidesHtml();
+    this.updateComparePreview();
+    this.updateNavButtons();
+  }
+
+  // 从 HTML 中提取每张幻灯片
+  extractSlidesHtml() {
+    this.slidesHtml = [];
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(this.currentHtml, 'text/html');
+
+    // 尝试不同的幻灯片选择器
+    const selectors = ['section', '.slide', '.page', '[data-slide]', '.swiper-slide'];
+    let slideElements = null;
+
+    for (const selector of selectors) {
+      const elements = doc.querySelectorAll(selector);
+      if (elements.length > 0) {
+        slideElements = elements;
+        break;
+      }
+    }
+
+    // 如果没找到幻灯片容器，把整个 body 作为单页幻灯片
+    if (!slideElements || slideElements.length === 0) {
+      slideElements = [doc.body];
+    }
+
+    // 提取样式
+    const styles = doc.querySelectorAll('style');
+    let styleContent = '';
+    styles.forEach(s => styleContent += s.outerHTML);
+
+    // 提取 link 样式表
+    const links = doc.querySelectorAll('link[rel="stylesheet"]');
+    let linkContent = '';
+    links.forEach(l => linkContent += l.outerHTML);
+
+    slideElements.forEach((el) => {
+      // 创建完整的 HTML 文档用于 iframe
+      const slideHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          ${linkContent}
+          ${styleContent}
+          <style>
+            body {
+              margin: 0;
+              padding: 0;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+              overflow: hidden;
+            }
+            .slide-container {
+              width: 100%;
+              height: 100%;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="slide-container">
+            ${el.outerHTML}
+          </div>
+        </body>
+        </html>
+      `;
+      this.slidesHtml.push(slideHtml);
+    });
+  }
+
+  // 更新双排对比预览
+  updateComparePreview() {
+    if (this.slidesHtml.length === 0) return;
+
+    const slideHtml = this.slidesHtml[this.currentSlideIndex];
+
+    // 更新 HTML 预览 (iframe)
+    if (this.htmlPreviewFrame) {
+      const iframeDoc = this.htmlPreviewFrame.contentDocument || this.htmlPreviewFrame.contentWindow.document;
+      iframeDoc.open();
+      iframeDoc.write(slideHtml);
+      iframeDoc.close();
+    }
+
+    // 更新 PPT 模拟预览
+    this.renderPptPreview(this.currentSlideIndex);
+
+    // 更新指示器
+    if (this.slideIndicator) {
+      this.slideIndicator.textContent = `${this.currentSlideIndex + 1} / ${this.slidesHtml.length}`;
+    }
+  }
+
+  // 渲染 PPT 模拟预览
+  renderPptPreview(slideIndex) {
+    if (!this.pptPreviewCanvas || !this.previewData[slideIndex]) return;
+
+    const slideData = this.previewData[slideIndex];
+    this.pptPreviewCanvas.innerHTML = '';
+
+    // 设置背景
+    if (slideData.hasBackground && slideData.backgroundColor) {
+      this.pptPreviewCanvas.style.background = slideData.backgroundColor;
+    } else {
+      this.pptPreviewCanvas.style.background = '#ffffff';
+    }
+
+    // 获取画布尺寸
+    const canvasRect = this.pptPreviewCanvas.getBoundingClientRect();
+    const canvasWidth = canvasRect.width || 400;
+    const canvasHeight = canvasRect.height || 225;
+
+    // 假设原始 HTML 是 1920x1080
+    const scaleX = canvasWidth / 1920;
+    const scaleY = canvasHeight / 1080;
+    const scale = Math.min(scaleX, scaleY);
+
+    // 创建预览提示
+    const infoDiv = document.createElement('div');
+    infoDiv.style.cssText = `
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+    `;
+    infoDiv.textContent = `幻灯片 ${slideIndex + 1}: ${slideData.title || 'Untitled'} (${slideData.elementCount} 元素)`;
+    this.pptPreviewCanvas.appendChild(infoDiv);
+
+    // 添加说明文字
+    const noteDiv = document.createElement('div');
+    noteDiv.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+    `;
+    noteDiv.innerHTML = `
+      <div style="font-size: 48px; margin-bottom: 10px;">📊</div>
+      <div style="font-weight: bold;">${this.escapeHtml(slideData.title || 'Untitled')}</div>
+      <div style="margin-top: 8px; color: #999;">${slideData.elementCount} 个元素</div>
+      <div style="margin-top: 8px; font-size: 12px; color: #aaa;">PPT 预览模拟</div>
+    `;
+    this.pptPreviewCanvas.appendChild(noteDiv);
+  }
+
+  // 导航到上一张/下一张幻灯片
+  navigateSlide(direction) {
+    const newIndex = this.currentSlideIndex + direction;
+    if (newIndex >= 0 && newIndex < this.slidesHtml.length) {
+      this.currentSlideIndex = newIndex;
+      this.updateComparePreview();
+      this.updateNavButtons();
+    }
+  }
+
+  // 更新导航按钮状态
+  updateNavButtons() {
+    if (this.prevSlideBtn) {
+      this.prevSlideBtn.disabled = this.currentSlideIndex <= 0;
+    }
+    if (this.nextSlideBtn) {
+      this.nextSlideBtn.disabled = this.currentSlideIndex >= this.slidesHtml.length - 1;
+    }
   }
 
   async convertAndDownload() {
@@ -307,6 +513,8 @@ class App {
   reset() {
     this.currentHtml = '';
     this.previewData = [];
+    this.slidesHtml = [];
+    this.currentSlideIndex = 0;
     this.htmlInput.value = '';
     this.fileInput.value = '';
     this.pptTitle.value = '';
@@ -320,6 +528,7 @@ class App {
   }
 
   hidePreview() {
+    this.compareSection.style.display = 'none';
     this.previewSection.style.display = 'none';
     this.optionsSection.style.display = 'none';
     this.actionSection.style.display = 'none';
