@@ -416,6 +416,13 @@ body {
 .status-text {
   font-size: 1rem;
   color: var(--text-primary);
+  flex: 1;
+}
+
+.progress-detail {
+  font-size: 0.9rem;
+  color: var(--primary-color);
+  font-weight: 600;
 }
 
 .progress-bar {
@@ -524,4 +531,87 @@ body {
 
 .status-bar.error .status-icon {
   color: var(--error-color);
+}
+
+/* ===== 日志区域 ===== */
+.log-section {
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-md);
+  margin-top: 20px;
+}
+
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.log-header h3 {
+  font-size: 1rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.log-toggle {
+  background: none;
+  border: 1px solid var(--border-color);
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.log-toggle:hover {
+  background: var(--bg-color);
+}
+
+.log-container {
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  font-size: 12px;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+}
+
+.log-container.collapsed {
+  max-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.log-entry {
+  padding: 4px 0;
+  border-bottom: 1px solid #333;
+}
+
+.log-entry:last-child {
+  border-bottom: none;
+}
+
+.log-entry.info {
+  color: #9cdcfe;
+}
+
+.log-entry.success {
+  color: #4ec9b0;
+}
+
+.log-entry.warning {
+  color: #dcdcaa;
+}
+
+.log-entry.error {
+  color: #f14c4c;
+}
+
+.log-time {
+  color: #808080;
+  margin-right: 8px;
 }

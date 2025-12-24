@@ -132,8 +132,24 @@ export class HtmlToPptConverter {
       company: options.company || ''
     };
 
+    const onProgress = options.onProgress || (() => {});
+    const total = slides.length;
+
     this.pptGenerator.initPresentation(metadata);
-    this.pptGenerator.generateFromSlides(slides);
+
+    // 逐页生成并报告进度
+    for (let i = 0; i < slides.length; i++) {
+      const slide = slides[i];
+      onProgress(i + 1, total, `正在处理第 ${i + 1}/${total} 页: ${slide.title || 'Untitled'}`);
+
+      // 添加幻灯片
+      this.pptGenerator.addSlide(slide);
+
+      // 让出线程，更新 UI
+      await new Promise(resolve => setTimeout(resolve, 10));
+    }
+
+    onProgress(total, total, '正在生成 PPT 文件...');
 
     return await this.pptGenerator.exportToBlob();
   }

@@ -114,9 +114,21 @@
         <div class="status-content">
           <span class="status-icon" id="statusIcon">⏳</span>
           <span class="status-text" id="statusText">处理中...</span>
+          <span class="progress-detail" id="progressDetail"></span>
         </div>
         <div class="progress-bar" id="progressBar">
           <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+
+      <!-- 日志区域 -->
+      <div class="log-section" id="logSection" style="display: none;">
+        <div class="log-header">
+          <h3>转换日志</h3>
+          <button class="log-toggle" id="logToggle">收起</button>
+        </div>
+        <div class="log-container" id="logContainer">
+          <!-- 日志条目将在这里动态生成 -->
         </div>
       </div>
     </main>
