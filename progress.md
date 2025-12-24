@@ -126,6 +126,37 @@
 - 代码测试: ✅ 通过 (49/49)
 - 浏览器测试: ✅ 通过 (5/5)
 
+**Git 提交**: `cc7a5f6` - fix: 修复文件选择器双重触发问题
+
+---
+
+### [2024-12-25 01:00] - Session 4
+
+**当前功能**: 修复 blob URL 图片加载失败问题
+
+**遇到的问题**:
+
+1. **转换 Gemini Dynamic View HTML 时报错**
+   - 错误信息: `ERROR! Unable to load image (xhr.onerror): blob:https://...`
+   - 原因: Gemini 生成的 HTML 中包含 `blob:` URL 的图片
+   - `blob:` URL 是临时的浏览器内存引用，无法通过 XHR 跨域访问
+   - PptxGenJS 尝试加载这些 URL 时失败
+
+**解决方案**:
+- 在 `PptGenerator.js` 中检测并跳过 `blob:` URL
+- 图片元素: 跳过并输出警告日志
+- 背景图片: 同样跳过并输出警告日志
+
+**修改内容**:
+
+1. `src/core/PptGenerator.js`:
+   - `addImageElement()`: 添加 `blob:` URL 检测，跳过无法加载的图片
+   - `setSlideBackground()`: 添加 `blob:` URL 检测，跳过无法加载的背景
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- 浏览器测试: ✅ 通过 (5/5)
+
 **Git 提交**: 待提交
 
 **下一步**: 提交代码并推送到 GitHub

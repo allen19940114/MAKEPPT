@@ -14,7 +14,7 @@ project-root/
 ├── init.sh                # 开发环境启动脚本
 ├── tests/
 │   ├── unit/              # 单元测试（Jest）
-│   └── e2e/               # 浏览器端到端测试（Puppeteer）
+│   └── e2e/               # 浏览器端到端测试（Playwright）
 └── src/                   # 源代码
 ```
 
@@ -152,18 +152,35 @@ git log --oneline -10
 npm test
 ```
 
-### 浏览器测试（使用 Puppeteer）
+### 浏览器测试（使用 Playwright）
 
-因为你无法直接操作浏览器，必须通过 Puppeteer 自动化测试：
+因为你无法直接操作浏览器，必须通过 Playwright 自动化测试：
 
 ```bash
 npm run test:e2e
 ```
 
-**Puppeteer 测试文件位置**: `tests/e2e/features/FXXX-*.test.js`
+**注意**: macOS 系统上 Puppeteer 可能无法正常启动浏览器，推荐使用 Playwright：
+```bash
+# 安装 Playwright
+npm install playwright @playwright/test
+
+# 安装 Chromium 浏览器
+npx playwright install chromium
+```
+
+**Playwright 测试文件位置**: `tests/e2e/features/FXXX-*.test.js`
+
+**测试配置选项**（在测试文件中）：
+```javascript
+browser = await chromium.launch({
+  headless: true,   // true: 后台运行（快速）, false: 显示浏览器窗口
+  slowMo: 500       // 可选：每个操作间隔毫秒数，便于观察
+});
+```
 
 **测试内容对应 feature_list.json 中的 browser_tests**：
-- 每个 `browser_tests` 条目对应一个 Puppeteer 测试用例
+- 每个 `browser_tests` 条目对应一个 Playwright 测试用例
 - 测试模拟真实用户操作：打开页面、填写表单、点击按钮、验证结果
 
 **测试通过标准**：

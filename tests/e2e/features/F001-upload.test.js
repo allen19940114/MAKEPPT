@@ -11,7 +11,8 @@ describe('F001 - HTML 文件上传与解析', () => {
 
   beforeAll(async () => {
     browser = await chromium.launch({
-      headless: true
+      headless: false,  // 显示浏览器窗口
+      slowMo: 500       // 每个操作间隔 500ms，方便观察
     });
   });
 

@@ -121,8 +121,11 @@ export class PptGenerator {
     // 背景图片
     else if (background.image) {
       const imgUrl = this.extractImageUrl(background.image);
-      if (imgUrl) {
+      // 跳过 blob: URL
+      if (imgUrl && !imgUrl.startsWith('blob:')) {
         slide.background = { path: imgUrl };
+      } else if (imgUrl && imgUrl.startsWith('blob:')) {
+        console.warn('Skipping blob URL background (not supported)');
       }
     }
   }
@@ -238,6 +241,12 @@ export class PptGenerator {
    */
   addImageElement(slide, element) {
     if (!element.src) return;
+
+    // 跳过 blob: URL，因为 PptxGenJS 无法通过 XHR 加载
+    if (element.src.startsWith('blob:')) {
+      console.warn('Skipping blob URL image (not supported):', element.src.substring(0, 50) + '...');
+      return;
+    }
 
     const position = this.calculatePosition(element.position);
 
