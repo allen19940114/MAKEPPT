@@ -309,37 +309,36 @@ export class StyleConverter {
   /**
    * 计算元素在幻灯片中的位置 (英寸)
    * 使用等比例缩放，保持 HTML 原始布局
-   * @param {Object} position - 位置数据 {x, y, width, height}
-   * @param {Object} containerSize - 容器尺寸 {width, height}
-   * @returns {Object} PPT 位置 {x, y, w, h}
+   * @param {Object} position - 位置数据 {x, y, width, height} (像素)
+   * @param {Object} containerSize - 容器尺寸 {width, height} (像素)
+   * @returns {Object} PPT 位置 {x, y, w, h} (英寸)
    */
   calculatePosition(position, containerSize) {
-    // 如果已经设置了缩放参数，使用它们
-    if (this.scale && this.scale !== 1) {
-      return {
-        x: position.x * this.scale + this.offsetX,
-        y: position.y * this.scale + this.offsetY,
-        w: position.width * this.scale,
-        h: position.height * this.scale
-      };
-    }
+    // 先将像素转换为英寸，然后计算缩放
+    const posXInches = this.pxToInches(position.x);
+    const posYInches = this.pxToInches(position.y);
+    const posWInches = this.pxToInches(position.width);
+    const posHInches = this.pxToInches(position.height);
 
-    // 否则计算新的缩放参数
-    const scaleX = this.slideWidth / containerSize.width;
-    const scaleY = this.slideHeight / containerSize.height;
+    const containerWInches = this.pxToInches(containerSize.width);
+    const containerHInches = this.pxToInches(containerSize.height);
+
+    // 计算缩放比例使内容适应幻灯片
+    const scaleX = this.slideWidth / containerWInches;
+    const scaleY = this.slideHeight / containerHInches;
     const scale = Math.min(scaleX, scaleY);
 
     // 计算居中偏移
-    const scaledWidth = containerSize.width * scale;
-    const scaledHeight = containerSize.height * scale;
+    const scaledWidth = containerWInches * scale;
+    const scaledHeight = containerHInches * scale;
     const offsetX = (this.slideWidth - scaledWidth) / 2;
     const offsetY = (this.slideHeight - scaledHeight) / 2;
 
     return {
-      x: position.x * scale + offsetX,
-      y: position.y * scale + offsetY,
-      w: position.width * scale,
-      h: position.height * scale
+      x: posXInches * scale + offsetX,
+      y: posYInches * scale + offsetY,
+      w: posWInches * scale,
+      h: posHInches * scale
     };
   }
 

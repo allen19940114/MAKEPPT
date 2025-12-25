@@ -226,56 +226,66 @@ export class PptGenerator {
     const textStyles = this.styleConverter.convertTextStyles(element.styles);
     const shapeStyles = this.styleConverter.convertShapeStyles(element.styles);
 
-    // 计算合适的文本宽度
-    let textWidth = position.w;
-    let textHeight = position.h;
-
-    // 如果宽度太小或为0，根据文本内容和字号估算
-    const fontSize = textStyles.fontSize || this.options.defaultFontSize;
-    if (textWidth <= 0.5) {
-      // 估算文本宽度：每个字符约 fontSize/72 英寸（对于中文可能更宽）
-      const avgCharWidthInches = fontSize / 72 * 0.55;
-      // 计算文本长度，考虑中文字符（占2个字符宽度）
-      let effectiveLength = 0;
-      for (const char of text) {
-        effectiveLength += char.charCodeAt(0) > 127 ? 1.5 : 1;
-      }
-      textWidth = Math.min(effectiveLength * avgCharWidthInches, this.options.slideWidth * 0.9);
-      textWidth = Math.max(textWidth, 1); // 最小宽度1英寸
-    }
-
-    // 确保高度合理
-    if (textHeight <= 0.2) {
-      textHeight = (fontSize / 72) * 1.5; // 行高约 1.5 倍字号
-    }
-
-    // 构建文本配置 - 保留换行但禁用自动缩放
-    const textOptions = {
-      x: position.x,
-      y: position.y,
-      w: textWidth,
-      h: textHeight,
-      ...textStyles,
-      ...shapeStyles,
-      valign: 'top',
-      wrap: true,            // 启用换行以匹配原始布局
-      shrinkText: false,     // 禁用文本自动缩放
-      autoFit: false,        // 禁用自动适配
-      isTextBox: true        // 明确标记为文本框
-    };
+    // 获取原始字体大小（如果有的话）
+    let fontSize = textStyles.fontSize || this.options.defaultFontSize;
 
     // 根据标题级别调整字号
     if (element.type === 'heading') {
       const level = parseInt(element.tagName?.replace('h', '') || '1');
       const headingSizes = { 1: 44, 2: 36, 3: 28, 4: 24, 5: 20, 6: 18 };
-      textOptions.fontSize = headingSizes[level] || 24;
-      textOptions.bold = true;
+      fontSize = headingSizes[level] || 24;
     }
 
-    // 添加动画
-    const animations = this.animationConverter.analyzeAndConvert(element.styles);
-    if (animations.length > 0) {
-      textOptions.animate = this.buildAnimationOptions(animations[0]);
+    // 计算合适的文本宽度
+    let textWidth = position.w;
+    let textHeight = position.h;
+
+    // 如果宽度太小或为0，根据文本内容和字号估算
+    if (textWidth <= 0.5) {
+      // 估算文本宽度：每个字符约 fontSize/72 英寸
+      const avgCharWidthInches = fontSize / 72 * 0.6;
+      // 计算文本长度，考虑中文字符（占更宽）
+      let effectiveLength = 0;
+      for (const char of text) {
+        effectiveLength += char.charCodeAt(0) > 127 ? 1.8 : 1;
+      }
+      textWidth = Math.min(effectiveLength * avgCharWidthInches, this.options.slideWidth * 0.85);
+      textWidth = Math.max(textWidth, 1.5); // 最小宽度1.5英寸
+    }
+
+    // 确保高度合理 - 基于字号和文本行数估算
+    if (textHeight <= 0.3) {
+      const lineHeight = (fontSize / 72) * 1.4; // 行高约 1.4 倍字号
+      // 估算行数
+      const charsPerLine = Math.floor(textWidth / (fontSize / 72 * 0.6));
+      const estimatedLines = Math.ceil(text.length / Math.max(charsPerLine, 10));
+      textHeight = lineHeight * Math.max(estimatedLines, 1);
+      textHeight = Math.min(textHeight, this.options.slideHeight * 0.5); // 最大高度限制
+    }
+
+    // 构建文本配置
+    const textOptions = {
+      x: position.x,
+      y: position.y,
+      w: textWidth,
+      h: textHeight,
+      fontFace: textStyles.fontFace || this.options.defaultFontFace,
+      fontSize: fontSize,
+      color: textStyles.color || '000000',
+      bold: element.type === 'heading' ? true : textStyles.bold,
+      italic: textStyles.italic || false,
+      underline: textStyles.underline || false,
+      strike: textStyles.strike || false,
+      align: textStyles.align || 'left',
+      valign: 'top',
+      wrap: true,
+      breakLine: true,
+      isTextBox: true
+    };
+
+    // 如果有背景色或边框，添加形状样式
+    if (shapeStyles.fill || shapeStyles.line) {
+      Object.assign(textOptions, shapeStyles);
     }
 
     slide.addText(text, textOptions);
@@ -317,31 +327,48 @@ export class PptGenerator {
 
     const position = this.calculatePosition(element.position);
 
+    // 确保图片有合理的尺寸
+    const imgW = position.w > 0.5 ? position.w : 3;
+    const imgH = position.h > 0.5 ? position.h : 2;
+
     const imageOptions = {
       x: position.x,
       y: position.y,
-      w: position.w || 2,
-      h: position.h || 2,
+      w: imgW,
+      h: imgH,
       sizing: {
         type: 'contain',
-        w: position.w || 2,
-        h: position.h || 2
+        w: imgW,
+        h: imgH
       }
     };
 
     // 判断图片类型
     if (element.src.startsWith('data:')) {
-      // Base64 图片
+      // Base64 图片 - 直接使用
       imageOptions.data = element.src;
-    } else {
-      // URL 图片
+      try {
+        slide.addImage(imageOptions);
+      } catch (error) {
+        console.warn('Failed to add base64 image:', error);
+      }
+    } else if (element.src.startsWith('http://') || element.src.startsWith('https://')) {
+      // 远程 URL 图片 - 需要下载转为 base64
+      // 由于 PptxGenJS 对跨域图片支持有限，尝试直接使用 path
       imageOptions.path = element.src;
-    }
-
-    try {
-      slide.addImage(imageOptions);
-    } catch (error) {
-      console.warn('Failed to add image:', error);
+      try {
+        slide.addImage(imageOptions);
+      } catch (error) {
+        console.warn('Failed to add remote image:', element.src, error);
+      }
+    } else {
+      // 相对路径或其他
+      imageOptions.path = element.src;
+      try {
+        slide.addImage(imageOptions);
+      } catch (error) {
+        console.warn('Failed to add image:', error);
+      }
     }
   }
 
