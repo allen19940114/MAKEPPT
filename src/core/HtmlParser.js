@@ -264,6 +264,8 @@ export class HtmlParser {
         elementData.iconColor = this.extractComputedStyles(element).color;
         elementData.isFontIcon = true;
         elementData.iconImageData = null; // 将在渲染阶段填充
+        // 保存图标名称（如 "home", "settings"）用于后续匹配正确的图标元素
+        elementData.iconName = text;
       }
       // 清空图标元素的文本内容，防止字体图标文本（如 "car", "home"）被当作普通文本输出
       // Material Icons 等字体图标使用文本内容来显示图标，这些文本不应该出现在 PPT 中
@@ -324,35 +326,51 @@ export class HtmlParser {
     const tagName = element.tagName.toLowerCase();
     const className = element.className || '';
     const classStr = typeof className === 'string' ? className : '';
+    const classList = classStr.split(/\s+/).filter(c => c);
 
-    // 检测常见的图标类名
-    const iconClassPatterns = [
-      'icon', 'fa', 'fas', 'far', 'fab', 'fal', 'fad',  // Font Awesome
-      'material-icons', 'material-icons-outlined', 'material-icons-round', 'material-icons-sharp', 'material-symbols',  // Material Icons
-      'glyphicon', 'bi', 'bi-',  // Bootstrap Icons
+    // 精确匹配的图标类名（必须完全匹配类名列表中的某一个）
+    const exactIconClasses = [
+      'fa', 'fas', 'far', 'fab', 'fal', 'fad',  // Font Awesome
+      'material-icons', 'material-icons-outlined', 'material-icons-round', 'material-icons-sharp', 'material-symbols-outlined',  // Material Icons
+      'glyphicon', 'bi',  // Bootstrap Icons
       'feather', 'lucide', 'heroicon',  // 其他图标库
-      'mdi', 'mdi-',  // Material Design Icons
-      'ion', 'ionicon',  // Ionicons
-      'ri-', 'remixicon'  // Remix Icons
+      'mdi', 'ion', 'ionicon', 'remixicon'  // 其他图标库
     ];
 
-    for (const pattern of iconClassPatterns) {
-      if (classStr.includes(pattern)) {
+    // 检查类名是否精确匹配图标类名
+    for (const cls of classList) {
+      if (exactIconClasses.includes(cls)) {
+        return true;
+      }
+      // Font Awesome 的 fa-* 类名
+      if (cls.startsWith('fa-') && cls.length > 3) {
+        return true;
+      }
+      // Bootstrap Icons 的 bi-* 类名
+      if (cls.startsWith('bi-') && cls.length > 3) {
+        return true;
+      }
+      // Material Design Icons 的 mdi-* 类名
+      if (cls.startsWith('mdi-') && cls.length > 4) {
+        return true;
+      }
+      // Remix Icons 的 ri-* 类名
+      if (cls.startsWith('ri-') && cls.length > 3) {
         return true;
       }
     }
 
-    // <i> 标签通常用于图标（允许更长的文本，因为 Material Icons 使用单词如 "car", "home"）
+    // <i> 标签带有图标类名（已在上面检测）或者内容是简单单词
     if (tagName === 'i') {
       const text = element.textContent.trim();
       // Material Icons 使用单词（如 "home", "car", "settings"）
-      // 检测是否是短单词（通常图标名不超过 30 个字符）
-      if (text.length <= 30 && /^[a-z_]+$/i.test(text)) {
+      // 检测是否是短单词（通常图标名不超过 30 个字符，且只有英文字母和下划线）
+      if (text.length > 0 && text.length <= 30 && /^[a-z_]+$/i.test(text)) {
         return true;
       }
     }
 
-    // <span> 标签带有 material-icons 类名已在上面处理
+    // <span> 标签必须有 material-icons 类名（已在上面检测）
 
     // SVG 图标
     if (tagName === 'svg') {

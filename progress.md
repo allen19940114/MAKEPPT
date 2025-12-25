@@ -677,4 +677,60 @@
 - 浏览器测试: ✅ 通过 (5/5)
 - 视觉测试: ✅ 通过
 
+---
+
+### [2024-12-25 21:45] - Session 15
+
+**当前功能**: 修复字体图标匹配错误问题
+
+**遇到的问题**:
+
+1. **字体图标仍然显示为文字，不是图标**
+   - 现象: PPT 中 `home` 和 `settings` 图标都变成了 `directions_car` 图标
+   - 原因 1: Canvas 无法正确渲染字体图标（字体在 Canvas 上下文中不可用）
+   - 原因 2: `isSameElement()` 使用类名匹配 (`material-icons`) 导致多个图标匹配到同一个元素
+   - 原因 3: HtmlParser 清空 `text` 后，无法通过文本内容匹配正确的图标
+
+**解决方案**:
+
+1. **使用预定义 SVG 路径替代 Canvas 渲染**:
+   - 创建 `MATERIAL_ICON_PATHS` 静态对象，包含 60+ 常用 Material Icons 的 SVG 路径
+   - 在 `captureElementToImage()` 中通过图标名称查找对应的 SVG 路径
+   - 生成 SVG 数据 URL 而非 Canvas PNG
+
+2. **HtmlParser 保存图标名称**:
+   - 在清空 `text` 之前，将原始文本保存到 `iconName` 字段
+   - 用于后续匹配正确的 DOM 图标元素
+
+3. **改进图标匹配逻辑**:
+   - 优先使用文本内容精确匹配（`iconName === iconEl.textContent`）
+   - 移除基于类名的 `isSameElement()` 备用匹配
+   - 只在位置信息可用且精确匹配时才使用位置匹配
+
+4. **改进图标元素检测**:
+   - `isIconElement()` 使用精确类名匹配而非子字符串匹配
+   - 防止 `.icon-item` 等容器类被误识别为图标
+
+**修改内容**:
+
+1. `src/core/HtmlToPptConverter.js`:
+   - 添加 `MATERIAL_ICON_PATHS` 静态对象（60+ Material Icons）
+   - `captureElementToImage()`: 使用预定义 SVG 路径生成图标
+   - `renderFontIconToImage()`: 改进匹配逻辑，优先文本匹配
+
+2. `src/core/HtmlParser.js`:
+   - `parseElement()`: 添加 `iconName` 字段保存原始图标名称
+   - `isIconElement()`: 改为精确类名匹配
+
+**验证结果**:
+- PPT 包含正确的 SVG 图标：
+  - `directions_car`: `M18.92 6.01...` ✓
+  - `home`: `M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z` ✓
+  - `settings`: `M19.14 12.94...` ✓
+- 每个图标都使用正确的 SVG 路径
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- 浏览器测试: ✅ 通过 (5/5)
+
 **下一步**: Git 提交并推送
