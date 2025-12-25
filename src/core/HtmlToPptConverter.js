@@ -1573,33 +1573,84 @@ export class HtmlToPptConverter {
 
     console.log(`[DEBUG] 开始提取 ${totalSlides} 页幻灯片...`);
 
-    // 等待脚本执行完成 - 检查 renderSlide 函数是否可用
-    let hasRenderSlide = typeof win.renderSlide === 'function';
+    // 检测可用的幻灯片渲染函数（支持多种命名方式）
+    let renderFunc = null;
+    let renderFuncName = '';
 
-    // 如果 renderSlide 不可用，等待更长时间让脚本执行
-    if (!hasRenderSlide) {
-      console.log(`[DEBUG] renderSlide 函数暂不可用，等待脚本执行...`);
-      for (let attempt = 0; attempt < 10; attempt++) {
-        await new Promise(r => setTimeout(r, 500));
-        hasRenderSlide = typeof win.renderSlide === 'function';
-        if (hasRenderSlide) {
-          console.log(`[DEBUG] renderSlide 函数已就绪 (尝试 ${attempt + 1} 次)`);
-          break;
-        }
+    // 等待脚本执行完成
+    for (let attempt = 0; attempt < 10; attempt++) {
+      // 检查各种可能的渲染函数
+      if (typeof win.renderSlide === 'function') {
+        renderFunc = win.renderSlide;
+        renderFuncName = 'renderSlide';
+        break;
+      }
+      if (typeof win.goToSlide === 'function') {
+        renderFunc = win.goToSlide;
+        renderFuncName = 'goToSlide';
+        break;
+      }
+      if (typeof win.showSlide === 'function') {
+        renderFunc = win.showSlide;
+        renderFuncName = 'showSlide';
+        break;
+      }
+      if (typeof win.navigateToSlide === 'function') {
+        renderFunc = win.navigateToSlide;
+        renderFuncName = 'navigateToSlide';
+        break;
+      }
+
+      if (attempt === 0) {
+        console.log(`[DEBUG] 渲染函数暂不可用，等待脚本执行...`);
+      }
+      await new Promise(r => setTimeout(r, 500));
+    }
+
+    console.log(`[DEBUG] 渲染函数: ${renderFuncName || '未找到'}`);
+
+    // 检测幻灯片容器元素（支持多种选择器）
+    const slideSelectors = [
+      '.slide',
+      '#main-stage > div',
+      '#main-stage',
+      '.slide-container > div',
+      '.slide-content',
+      '[data-slide]',
+      '.swiper-slide-active'
+    ];
+
+    let slideSelector = null;
+    for (const selector of slideSelectors) {
+      const el = doc.querySelector(selector);
+      if (el) {
+        slideSelector = selector;
+        console.log(`[DEBUG] 幻灯片容器选择器: ${selector}`);
+        break;
       }
     }
 
-    console.log(`[DEBUG] renderSlide 函数可用: ${hasRenderSlide}`);
-
-    // 检查 .slide 元素是否存在
-    let slideElement = doc.querySelector('.slide');
-    if (!slideElement && !hasRenderSlide) {
-      console.log(`[DEBUG] DOM 中没有 .slide 元素且 renderSlide 不可用，等待 DOM 加载...`);
+    if (!slideSelector && !renderFunc) {
+      console.log(`[DEBUG] 未找到幻灯片容器和渲染函数，等待 DOM 加载...`);
       for (let attempt = 0; attempt < 10; attempt++) {
         await new Promise(r => setTimeout(r, 500));
-        slideElement = doc.querySelector('.slide');
-        hasRenderSlide = typeof win.renderSlide === 'function';
-        if (slideElement || hasRenderSlide) {
+        for (const selector of slideSelectors) {
+          if (doc.querySelector(selector)) {
+            slideSelector = selector;
+            break;
+          }
+        }
+        // 再次检查渲染函数
+        if (!renderFunc) {
+          if (typeof win.goToSlide === 'function') {
+            renderFunc = win.goToSlide;
+            renderFuncName = 'goToSlide';
+          } else if (typeof win.renderSlide === 'function') {
+            renderFunc = win.renderSlide;
+            renderFuncName = 'renderSlide';
+          }
+        }
+        if (slideSelector || renderFunc) {
           console.log(`[DEBUG] DOM 已就绪 (尝试 ${attempt + 1} 次)`);
           break;
         }
@@ -1609,21 +1660,36 @@ export class HtmlToPptConverter {
     for (let i = 0; i < totalSlides; i++) {
       try {
         // 调用渲染函数显示当前幻灯片
-        if (hasRenderSlide) {
-          win.renderSlide(i);
+        if (renderFunc) {
+          renderFunc.call(win, i);
           // 等待渲染完成
           await new Promise(r => setTimeout(r, 400));
         }
 
-        // 解析当前显示的幻灯片
-        const slideElement = doc.querySelector('.slide');
+        // 查找当前显示的幻灯片元素
+        let slideElement = null;
+
+        // 尝试多种选择器
+        for (const selector of slideSelectors) {
+          const el = doc.querySelector(selector);
+          if (el && el.children.length > 0) {
+            slideElement = el;
+            break;
+          }
+        }
+
+        // 如果是 #main-stage，使用其第一个子元素
+        if (slideElement && slideElement.id === 'main-stage' && slideElement.firstElementChild) {
+          slideElement = slideElement.firstElementChild;
+        }
+
         if (slideElement) {
           const slideData = this.htmlParser.parseSlideElement(slideElement, i);
           slideData.title = slidesData[i]?.title || slideData.title || `Slide ${i + 1}`;
           slides.push(slideData);
-          console.log(`[DEBUG] 已提取幻灯片 ${i + 1}/${totalSlides}: ${slideData.title}`);
+          console.log(`[DEBUG] 已提取幻灯片 ${i + 1}/${totalSlides}: ${slideData.title} (元素数: ${slideData.elements?.length || 0})`);
         } else {
-          console.warn(`[DEBUG] 第 ${i + 1} 页未找到 .slide 元素`);
+          console.warn(`[DEBUG] 第 ${i + 1} 页未找到幻灯片元素`);
           // 创建一个空白幻灯片占位
           slides.push({
             index: i,

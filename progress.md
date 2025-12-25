@@ -1752,3 +1752,50 @@
   20 - Value Proposition (type: roi)
 ```
 
+---
+
+### [2024-12-25 16:00] - Session 25 补充
+
+**遇到的问题**:
+
+1. **生成的是空白页**
+   - 现象: 虽然解析出了 20 页元数据，但 PPT 中都是空白页
+   - 根本原因: `extractSlidesFromParsedData()` 函数只支持 `renderSlide` 函数和 `.slide` 选择器
+   - SNTP 文件使用不同的渲染机制:
+     - 渲染函数: `goToSlide(index)` 而非 `renderSlide(index)`
+     - 幻灯片容器: `#main-stage > div` 而非 `.slide`
+
+**解决方案**:
+
+1. **支持多种渲染函数名称**:
+   - `renderSlide`
+   - `goToSlide`（SNTP 使用）
+   - `showSlide`
+   - `navigateToSlide`
+
+2. **支持多种幻灯片容器选择器**:
+   - `.slide`
+   - `#main-stage > div`（SNTP 使用）
+   - `#main-stage`
+   - `.slide-container > div`
+   - `.slide-content`
+   - `[data-slide]`
+   - `.swiper-slide-active`
+
+3. **智能选择器检测**:
+   - 遍历所有可能的选择器，使用第一个匹配的
+   - 如果选择器是 `#main-stage`，自动使用其第一个子元素
+
+**修改内容**:
+
+1. `src/core/HtmlToPptConverter.js`:
+   - `extractSlidesFromParsedData()`:
+     - 重构渲染函数检测逻辑
+     - 添加 `slideSelectors` 数组支持多种选择器
+     - 自动检测并使用可用的渲染函数和容器
+     - 添加调试日志显示检测到的函数名和选择器
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- E2E 测试: ✅ 通过 (5/5)
+
