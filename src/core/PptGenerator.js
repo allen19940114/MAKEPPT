@@ -14,10 +14,13 @@ export class PptGenerator {
     this.animationConverter = new AnimationConverter();
 
     // 预设的幻灯片尺寸 (英寸)
+    // 使用自定义布局名称，通过 defineLayout 设置精确尺寸
     this.SLIDE_PRESETS = {
-      '16:9': { width: 13.333, height: 7.5, layout: 'LAYOUT_16x9' },
-      '4:3': { width: 10, height: 7.5, layout: 'LAYOUT_4x3' },
-      'wide': { width: 13.333, height: 7.5, layout: 'LAYOUT_WIDE' }
+      '16:9': { width: 13.333, height: 7.5, layoutName: 'CUSTOM_16x9' },
+      '4:3': { width: 10, height: 7.5, layoutName: 'CUSTOM_4x3' },
+      'wide': { width: 13.333, height: 7.5, layoutName: 'CUSTOM_WIDE' },
+      'a4': { width: 11.69, height: 8.27, layoutName: 'CUSTOM_A4' },  // A4 横向
+      'letter': { width: 11, height: 8.5, layoutName: 'CUSTOM_LETTER' }  // Letter 横向
     };
 
     // 默认使用 16:9
@@ -28,7 +31,7 @@ export class PptGenerator {
     this.options = {
       slideWidth: options.slideWidth || preset.width,
       slideHeight: options.slideHeight || preset.height,
-      slideLayout: preset.layout,
+      layoutName: preset.layoutName,
       aspectRatio: aspectRatio,
       defaultFontFace: options.defaultFontFace || 'Arial',
       defaultFontSize: options.defaultFontSize || 18,
@@ -54,8 +57,18 @@ export class PptGenerator {
   initPresentation(metadata = {}) {
     this.pptx = new pptxgen();
 
+    // 使用 defineLayout 定义自定义布局，确保精确的幻灯片尺寸
+    // 这样可以避免 PowerPoint 打开时显示不同比例的问题
+    this.pptx.defineLayout({
+      name: this.options.layoutName,
+      width: this.options.slideWidth,
+      height: this.options.slideHeight
+    });
+
+    // 设置使用自定义布局
+    this.pptx.layout = this.options.layoutName;
+
     // 设置演示文稿属性
-    this.pptx.layout = this.options.slideLayout;
     this.pptx.author = metadata.author || 'HTML to PPT Converter';
     this.pptx.title = metadata.title || 'Converted Presentation';
     this.pptx.subject = metadata.subject || '';
