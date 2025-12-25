@@ -1377,4 +1377,41 @@
 - ellipse: 1（黄色圆形）
 - 图片: 1（渐变）
 
+---
+
+### [2024-12-25 22:40] - Session 19
+
+**当前功能**: 实现渐变字体支持
+
+**背景**:
+- CSS 渐变字体使用 `background: linear-gradient(...)` + `background-clip: text` + `-webkit-text-fill-color: transparent` 实现
+- 例如 "Digital Future" 标题使用渐变效果
+- PptxGenJS 不支持渐变文本填充
+
+**解决方案**:
+- 类似渐变背景的处理方式，使用 Canvas 将渐变字体渲染为 PNG 图片
+
+**修改内容**:
+
+1. `src/core/HtmlParser.js`:
+   - `extractComputedStyles()`: 添加渐变字体检测
+   - 检测 `backgroundClip: text` + `textFillColor: transparent` + `gradient`
+   - 新增 `hasGradientText`, `backgroundClip`, `textFillColor` 属性
+
+2. `src/core/HtmlToPptConverter.js`:
+   - `captureGradientsInElements()`: 同时处理渐变背景和渐变字体
+   - 新增 `renderGradientTextToImage()`: Canvas 渲染渐变字体
+     - 测量文本尺寸
+     - 解析渐变方向和颜色
+     - 使用 `ctx.fillText()` 绘制渐变文字
+     - 返回 2x 高清 PNG
+
+3. `src/core/PptGenerator.js`:
+   - `addTextElement()`: 优先检查 `gradientTextImageData`
+   - 如果有渐变字体图片，使用 `slide.addImage()` 添加
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- E2E 测试: ✅ 通过
+
 **下一步**: Git 提交并推送

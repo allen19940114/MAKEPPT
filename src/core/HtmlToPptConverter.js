@@ -172,7 +172,7 @@ export class HtmlToPptConverter {
   }
 
   /**
-   * 递归捕获元素中的渐变背景
+   * 递归捕获元素中的渐变背景和渐变字体
    * @param {Array} elements - 元素数组
    * @param {Document} doc - 渲染后的文档
    */
@@ -180,7 +180,8 @@ export class HtmlToPptConverter {
     for (const element of elements) {
       // 如果是容器且有渐变背景，捕获为图片
       if (element.type === 'container' &&
-          element.styles?.backgroundImage?.includes('gradient')) {
+          element.styles?.backgroundImage?.includes('gradient') &&
+          !element.styles?.hasGradientText) {
         try {
           const gradientImage = await this.renderGradientToImage(element, doc);
           if (gradientImage) {
@@ -188,6 +189,18 @@ export class HtmlToPptConverter {
           }
         } catch (error) {
           console.warn('Failed to capture gradient:', error);
+        }
+      }
+
+      // 如果是渐变字体，捕获为图片
+      if (element.styles?.hasGradientText && element.text) {
+        try {
+          const gradientTextImage = await this.renderGradientTextToImage(element, doc);
+          if (gradientTextImage) {
+            element.gradientTextImageData = gradientTextImage;
+          }
+        } catch (error) {
+          console.warn('Failed to capture gradient text:', error);
         }
       }
 
@@ -270,6 +283,95 @@ export class HtmlToPptConverter {
       }
       ctx.fillStyle = gradient;
       ctx.fill();
+
+      return canvas.toDataURL('image/png');
+    }
+
+    return null;
+  }
+
+  /**
+   * 将渐变字体渲染为图片
+   * @param {Object} element - 元素数据
+   * @param {Document} doc - 渲染后的文档
+   * @returns {Promise<string|null>} base64 图片数据
+   */
+  async renderGradientTextToImage(element, doc) {
+    const text = element.text || '';
+    if (!text) return null;
+
+    const styles = element.styles || {};
+    const fontSize = parseFloat(styles.fontSize) || 48;
+    const fontWeight = styles.fontWeight || 'normal';
+    const fontFamily = styles.fontFamily || 'Arial, sans-serif';
+
+    // 创建 Canvas
+    const canvas = doc.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // 设置字体以测量文本尺寸
+    ctx.font = `${fontWeight} ${fontSize * 2}px ${fontFamily}`;
+    const metrics = ctx.measureText(text);
+    const textWidth = metrics.width;
+    const textHeight = fontSize * 2.5; // 预留行高
+
+    // 设置 canvas 尺寸（2x 高清）
+    canvas.width = Math.ceil(textWidth) + 20;
+    canvas.height = Math.ceil(textHeight);
+
+    // 解析渐变
+    const bgImage = styles.backgroundImage;
+    const gradientMatch = bgImage?.match(/linear-gradient\((.+)\)$/);
+
+    if (gradientMatch) {
+      const gradientStr = gradientMatch[1];
+
+      // 解析方向
+      let angle = 180;
+      if (gradientStr.includes('to right')) angle = 90;
+      else if (gradientStr.includes('to left')) angle = 270;
+      else if (gradientStr.includes('to bottom')) angle = 180;
+      else if (gradientStr.includes('to top')) angle = 0;
+      else {
+        const angleMatch = gradientStr.match(/(\d+)deg/);
+        if (angleMatch) angle = parseInt(angleMatch[1]);
+      }
+
+      // 计算渐变起点和终点
+      const rad = (angle - 90) * Math.PI / 180;
+      const halfW = canvas.width / 2;
+      const halfH = canvas.height / 2;
+      const x1 = halfW - Math.cos(rad) * halfW;
+      const y1 = halfH - Math.sin(rad) * halfH;
+      const x2 = halfW + Math.cos(rad) * halfW;
+      const y2 = halfH + Math.sin(rad) * halfH;
+
+      const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+
+      // 解析颜色
+      const colorRegex = /(#[0-9A-Fa-f]{3,8}|rgba?\([^)]+\))/g;
+      const colors = [];
+      let match;
+      while ((match = colorRegex.exec(gradientStr)) !== null) {
+        colors.push(match[1]);
+      }
+
+      if (colors.length >= 2) {
+        colors.forEach((color, i) => {
+          gradient.addColorStop(i / (colors.length - 1), color);
+        });
+      } else {
+        return null;
+      }
+
+      // 重新设置字体（canvas 尺寸改变后需要重设）
+      ctx.font = `${fontWeight} ${fontSize * 2}px ${fontFamily}`;
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'center';
+
+      // 使用渐变填充文字
+      ctx.fillStyle = gradient;
+      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
 
       return canvas.toDataURL('image/png');
     }

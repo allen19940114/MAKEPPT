@@ -244,6 +244,22 @@ export class PptGenerator {
     if (!text) return;
 
     const position = this.calculatePosition(element.position);
+
+    // 如果是渐变字体，使用预渲染的图片
+    if (element.gradientTextImageData) {
+      try {
+        slide.addImage({
+          data: element.gradientTextImageData,
+          x: position.x,
+          y: position.y,
+          w: position.w || 2,
+          h: position.h || 0.8
+        });
+        return;
+      } catch (e) {
+        console.warn('Failed to add gradient text image, falling back to text:', e);
+      }
+    }
     const textStyles = this.styleConverter.convertTextStyles(element.styles);
     const shapeStyles = this.styleConverter.convertShapeStyles(element.styles);
 

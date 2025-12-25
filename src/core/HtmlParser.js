@@ -411,6 +411,13 @@ export class HtmlParser {
       window.getComputedStyle(element) :
       element.style;
 
+    // 检测渐变字体：background-clip: text 或 -webkit-background-clip: text
+    const backgroundClip = style.backgroundClip || style.webkitBackgroundClip || '';
+    const textFillColor = style.webkitTextFillColor || '';
+    const hasGradientText = backgroundClip.includes('text') &&
+      (textFillColor === 'transparent' || textFillColor.includes('rgba(0, 0, 0, 0)')) &&
+      style.backgroundImage && style.backgroundImage.includes('gradient');
+
     return {
       // 字体样式
       fontFamily: style.fontFamily,
@@ -426,6 +433,11 @@ export class HtmlParser {
       color: this.normalizeColor(style.color),
       backgroundColor: this.normalizeColor(style.backgroundColor),
       backgroundImage: style.backgroundImage,
+
+      // 渐变字体标记
+      hasGradientText: hasGradientText,
+      backgroundClip: backgroundClip,
+      textFillColor: textFillColor,
 
       // 边框
       borderWidth: style.borderWidth,
