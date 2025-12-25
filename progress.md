@@ -1498,3 +1498,65 @@
 - E2E 测试: ✅ 通过 (5/5)
 
 **下一步**: 用户手动测试 SAP_PPM_Presentation.html 验证 20 页识别
+
+---
+
+### [2024-12-25 24:30] - Session 21
+
+**当前功能**: 修复动态幻灯片识别 - SAP_PPM_Presentation.html 20 页
+
+**遇到的问题**:
+- 之前的动态幻灯片检测依赖 `iframe.contentWindow.slides` 访问 JavaScript 变量
+- 但 iframe 中的 JavaScript 可能无法正确执行或访问受限
+- 测试显示: `hasSlidesArray: false`, `slidesLength: 0`
+
+**解决方案**:
+直接从 HTML 字符串中解析 `const slides = [...]` 数组，不依赖 iframe 执行脚本
+
+**新增方法**:
+
+1. `parseSlidesArrayFromHtml(htmlString)`:
+   - 使用正则匹配找到 `const slides = [` 开始位置
+   - 手动解析括号匹配，处理字符串、模板字符串、嵌套对象
+   - 只提取顶层对象（arrayDepth=1, objectDepth=1）
+   - 从每个顶层对象中提取 `id` 和 `title`
+
+2. `extractSlidesFromParsedData(slidesData, win, doc)`:
+   - 根据解析出的幻灯片数量，逐页调用 `win.renderSlide(i)`
+   - 等待 400ms 确保渲染完成
+   - 使用 `HtmlParser.parseSlideElement()` 解析当前 DOM
+
+**关键修复**:
+- 区分顶层幻灯片对象和嵌套对象（如 slide 9 中的子数组）
+- 原先错误识别为 25 个，修复后正确识别 20 个
+
+**修改内容**:
+
+1. `src/core/HtmlToPptConverter.js`:
+   - `renderAndParse()`: 优先使用 `parseSlidesArrayFromHtml()` 解析
+   - 新增 `parseSlidesArrayFromHtml()`: 从 HTML 字符串解析 slides 数组
+   - 新增 `extractSlidesFromParsedData()`: 根据解析结果提取幻灯片
+
+2. `tests/e2e/features/dynamic-slides.spec.js`:
+   - 新增 Playwright 测试验证 20 页正确识别
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- E2E 测试: ✅ 通过 (6/6)
+  - `dynamic-slides.spec.js`: SAP_PPM_Presentation.html 20 页幻灯片 ✅
+
+**输出日志**:
+```
+[DEBUG] 找到 slides 数组，长度: 15909 字符
+[DEBUG] 解析出 20 个顶层幻灯片对象
+[DEBUG] 从 HTML 解析到 20 页幻灯片数据
+[DEBUG] 开始提取 20 页幻灯片...
+[DEBUG] renderSlide 函数可用: true
+[DEBUG] 已提取幻灯片 1/20: SAP PPM Solution Overview
+...
+[DEBUG] 已提取幻灯片 20/20: Q & A
+[DEBUG] 总共提取了 20 页幻灯片
+=== PPT 幻灯片数量: 20 ===
+```
+
+**下一步**: 提交代码并推送到远程仓库

@@ -80,6 +80,9 @@ export class HtmlToPptConverter {
    * @returns {Promise<Array<SlideData>>} 带有计算样式的幻灯片数据
    */
   async renderAndParse(htmlString, options = {}) {
+    // 首先尝试从 HTML 字符串中直接解析 slides 数组（更可靠）
+    const parsedSlidesData = this.parseSlidesArrayFromHtml(htmlString);
+
     return new Promise((resolve) => {
       // 创建隐藏的 iframe 来渲染 HTML
       const iframe = document.createElement('iframe');
@@ -112,17 +115,28 @@ export class HtmlToPptConverter {
           // 再等待一下确保脚本执行完成
           await new Promise(r => setTimeout(r, 500));
 
-          // 检测是否为动态幻灯片（JavaScript 渲染的幻灯片）
-          const dynamicSlides = await this.detectAndExtractDynamicSlides(iframe.contentWindow, iframeDoc);
-
           let slides;
-          if (dynamicSlides && dynamicSlides.length > 1) {
-            // 使用动态提取的幻灯片
-            console.log(`[DEBUG] 检测到 ${dynamicSlides.length} 页动态幻灯片`);
-            slides = dynamicSlides;
+
+          // 如果从 HTML 中解析到了 slides 数组，使用它来渲染每一页
+          if (parsedSlidesData && parsedSlidesData.length > 1) {
+            console.log(`[DEBUG] 从 HTML 解析到 ${parsedSlidesData.length} 页幻灯片数据`);
+            slides = await this.extractSlidesFromParsedData(
+              parsedSlidesData,
+              iframe.contentWindow,
+              iframeDoc
+            );
           } else {
-            // 回退到静态提取
-            slides = this.htmlParser.extractSlides(iframeDoc);
+            // 检测是否为动态幻灯片（JavaScript 渲染的幻灯片）
+            const dynamicSlides = await this.detectAndExtractDynamicSlides(iframe.contentWindow, iframeDoc);
+
+            if (dynamicSlides && dynamicSlides.length > 1) {
+              // 使用动态提取的幻灯片
+              console.log(`[DEBUG] 检测到 ${dynamicSlides.length} 页动态幻灯片`);
+              slides = dynamicSlides;
+            } else {
+              // 回退到静态提取
+              slides = this.htmlParser.extractSlides(iframeDoc);
+            }
           }
 
           // 捕获字体图标为图片
@@ -1310,6 +1324,248 @@ export class HtmlToPptConverter {
       }
     }
 
+    return slides;
+  }
+
+  /**
+   * 从 HTML 字符串中直接解析 JavaScript slides 数组
+   * 使用正则表达式提取，不依赖 iframe 执行脚本
+   * @param {string} htmlString - HTML 内容
+   * @returns {Array|null} 解析出的 slides 数据数组
+   */
+  parseSlidesArrayFromHtml(htmlString) {
+    try {
+      // 查找 const slides = [...] 或 let slides = [...] 或 var slides = [...]
+      // 使用贪婪匹配来获取完整的数组
+      const slidesMatch = htmlString.match(/(?:const|let|var)\s+slides\s*=\s*\[/);
+      if (!slidesMatch) {
+        console.log('[DEBUG] 未找到 slides 数组定义');
+        return null;
+      }
+
+      const startIndex = slidesMatch.index + slidesMatch[0].length - 1;
+
+      // 手动解析找到匹配的结束括号
+      let bracketCount = 1;
+      let endIndex = startIndex + 1;
+      let inString = false;
+      let stringChar = '';
+      let escaping = false;
+      let inTemplate = false;
+      let templateDepth = 0;
+
+      while (bracketCount > 0 && endIndex < htmlString.length) {
+        const char = htmlString[endIndex];
+
+        if (escaping) {
+          escaping = false;
+          endIndex++;
+          continue;
+        }
+
+        if (char === '\\' && inString) {
+          escaping = true;
+          endIndex++;
+          continue;
+        }
+
+        // 处理模板字符串
+        if (char === '`' && !inString) {
+          inTemplate = !inTemplate;
+          if (inTemplate) {
+            templateDepth = 1;
+          } else {
+            templateDepth = 0;
+          }
+          endIndex++;
+          continue;
+        }
+
+        // 在模板字符串内部，跟踪 ${} 嵌套
+        if (inTemplate) {
+          if (char === '$' && htmlString[endIndex + 1] === '{') {
+            templateDepth++;
+            endIndex++;
+          } else if (char === '}' && templateDepth > 1) {
+            templateDepth--;
+          } else if (char === '`' && templateDepth === 1) {
+            inTemplate = false;
+            templateDepth = 0;
+          }
+          endIndex++;
+          continue;
+        }
+
+        // 处理普通字符串
+        if ((char === '"' || char === "'") && !inString) {
+          inString = true;
+          stringChar = char;
+          endIndex++;
+          continue;
+        }
+
+        if (char === stringChar && inString) {
+          inString = false;
+          stringChar = '';
+          endIndex++;
+          continue;
+        }
+
+        if (inString) {
+          endIndex++;
+          continue;
+        }
+
+        // 计算括号
+        if (char === '[') {
+          bracketCount++;
+        } else if (char === ']') {
+          bracketCount--;
+        }
+
+        endIndex++;
+      }
+
+      if (bracketCount !== 0) {
+        console.log('[DEBUG] 括号不匹配');
+        return null;
+      }
+
+      const slidesArrayStr = htmlString.substring(startIndex, endIndex);
+      console.log(`[DEBUG] 找到 slides 数组，长度: ${slidesArrayStr.length} 字符`);
+
+      // 精确解析顶层对象，提取每个幻灯片的信息
+      // 只匹配数组第一层的对象
+      const slidesInfo = [];
+      let arrayDepth = 0;   // [] 括号深度
+      let objectDepth = 0;  // {} 括号深度
+      let inStr = false;
+      let strChar = '';
+      let inTpl = false;
+      let currentObjectStart = -1;
+
+      for (let i = 0; i < slidesArrayStr.length; i++) {
+        const char = slidesArrayStr[i];
+
+        // 跳过字符串内容
+        if (!inTpl) {
+          if ((char === '"' || char === "'") && !inStr) {
+            inStr = true;
+            strChar = char;
+            continue;
+          }
+          if (char === strChar && inStr && slidesArrayStr[i - 1] !== '\\') {
+            inStr = false;
+            strChar = '';
+            continue;
+          }
+        }
+
+        // 处理模板字符串
+        if (char === '`' && !inStr) {
+          inTpl = !inTpl;
+          continue;
+        }
+
+        if (inStr || inTpl) continue;
+
+        // 计算括号深度
+        if (char === '[') {
+          arrayDepth++;
+        } else if (char === ']') {
+          arrayDepth--;
+        } else if (char === '{') {
+          objectDepth++;
+          // 如果是数组第一层的对象开始
+          if (arrayDepth === 1 && objectDepth === 1) {
+            currentObjectStart = i;
+          }
+        } else if (char === '}') {
+          // 如果是顶层对象结束
+          if (arrayDepth === 1 && objectDepth === 1 && currentObjectStart !== -1) {
+            const objectStr = slidesArrayStr.substring(currentObjectStart, i + 1);
+            // 只从顶层对象中提取 id 和 title
+            const idMatch = objectStr.match(/^\s*\{\s*(?:[^{}]*,)?\s*id:\s*(\d+)/);
+            const titleMatch = objectStr.match(/title:\s*["']([^"']+)["']/);
+
+            if (idMatch) {
+              slidesInfo.push({
+                id: parseInt(idMatch[1]),
+                title: titleMatch ? titleMatch[1] : `Slide ${slidesInfo.length + 1}`,
+                index: slidesInfo.length
+              });
+            }
+            currentObjectStart = -1;
+          }
+          objectDepth--;
+        }
+      }
+
+      console.log(`[DEBUG] 解析出 ${slidesInfo.length} 个顶层幻灯片对象`);
+      return slidesInfo.length > 0 ? slidesInfo : null;
+
+    } catch (error) {
+      console.warn('[DEBUG] 解析 slides 数组失败:', error);
+      return null;
+    }
+  }
+
+  /**
+   * 根据解析出的 slides 数据，逐页渲染并提取幻灯片
+   * @param {Array} slidesData - 解析出的 slides 数据
+   * @param {Window} win - iframe 的 window 对象
+   * @param {Document} doc - iframe 的 document 对象
+   * @returns {Promise<Array<SlideData>>} 幻灯片数据数组
+   */
+  async extractSlidesFromParsedData(slidesData, win, doc) {
+    const slides = [];
+    const totalSlides = slidesData.length;
+
+    console.log(`[DEBUG] 开始提取 ${totalSlides} 页幻灯片...`);
+
+    // 检查是否有 renderSlide 函数
+    const hasRenderSlide = typeof win.renderSlide === 'function';
+    console.log(`[DEBUG] renderSlide 函数可用: ${hasRenderSlide}`);
+
+    for (let i = 0; i < totalSlides; i++) {
+      try {
+        // 调用渲染函数显示当前幻灯片
+        if (hasRenderSlide) {
+          win.renderSlide(i);
+          // 等待渲染完成
+          await new Promise(r => setTimeout(r, 400));
+        }
+
+        // 解析当前显示的幻灯片
+        const slideElement = doc.querySelector('.slide');
+        if (slideElement) {
+          const slideData = this.htmlParser.parseSlideElement(slideElement, i);
+          slideData.title = slidesData[i]?.title || slideData.title || `Slide ${i + 1}`;
+          slides.push(slideData);
+          console.log(`[DEBUG] 已提取幻灯片 ${i + 1}/${totalSlides}: ${slideData.title}`);
+        } else {
+          console.warn(`[DEBUG] 第 ${i + 1} 页未找到 .slide 元素`);
+          // 创建一个空白幻灯片占位
+          slides.push({
+            index: i,
+            title: slidesData[i]?.title || `Slide ${i + 1}`,
+            elements: [],
+            background: {}
+          });
+        }
+      } catch (error) {
+        console.warn(`[DEBUG] 提取幻灯片 ${i + 1} 失败:`, error);
+        // 创建一个空白幻灯片占位
+        slides.push({
+          index: i,
+          title: slidesData[i]?.title || `Slide ${i + 1}`,
+          elements: [],
+          background: {}
+        });
+      }
+    }
+
+    console.log(`[DEBUG] 总共提取了 ${slides.length} 页幻灯片`);
     return slides;
   }
 }
