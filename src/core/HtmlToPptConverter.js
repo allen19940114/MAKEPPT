@@ -108,7 +108,18 @@ export class HtmlToPptConverter {
             }
           }
 
-          const slides = this.htmlParser.extractSlides(iframeDoc);
+          // 检测是否为动态幻灯片（JavaScript 渲染的幻灯片）
+          const dynamicSlides = await this.detectAndExtractDynamicSlides(iframe.contentWindow, iframeDoc);
+
+          let slides;
+          if (dynamicSlides && dynamicSlides.length > 1) {
+            // 使用动态提取的幻灯片
+            console.log(`[DEBUG] 检测到 ${dynamicSlides.length} 页动态幻灯片`);
+            slides = dynamicSlides;
+          } else {
+            // 回退到静态提取
+            slides = this.htmlParser.extractSlides(iframeDoc);
+          }
 
           // 捕获字体图标为图片
           await this.captureFontIcons(slides, iframeDoc);
@@ -1159,6 +1170,131 @@ export class HtmlToPptConverter {
     return Array.from(colors.values())
       .sort((a, b) => b.count - a.count)
       .slice(0, 30); // 只返回前 30 个
+  }
+
+  /**
+   * 检测并提取动态渲染的幻灯片
+   * 针对使用 JavaScript 动态渲染的演示文稿（如 SAP PPM Presentation）
+   * @param {Window} win - iframe 的 window 对象
+   * @param {Document} doc - iframe 的 document 对象
+   * @returns {Promise<Array<SlideData>|null>} 幻灯片数据数组，如果不是动态幻灯片返回 null
+   */
+  async detectAndExtractDynamicSlides(win, doc) {
+    try {
+      // 检测是否存在 slides 数组和 renderSlide 函数
+      const hasSlides = typeof win.slides !== 'undefined' && Array.isArray(win.slides);
+      const hasRenderSlide = typeof win.renderSlide === 'function';
+
+      // 检测是否有幻灯片计数器（如 "1 / 20"）
+      const totalSlidesElement = doc.getElementById('total-slides');
+      const hasTotalSlides = totalSlidesElement && parseInt(totalSlidesElement.textContent) > 1;
+
+      // 检测是否只有一个 .slide 元素但有多个幻灯片数据
+      const staticSlideCount = doc.querySelectorAll('.slide').length;
+
+      console.log(`[DEBUG] Dynamic slide detection: hasSlides=${hasSlides}, hasRenderSlide=${hasRenderSlide}, hasTotalSlides=${hasTotalSlides}, staticSlideCount=${staticSlideCount}`);
+
+      // 如果存在动态幻灯片数据
+      if (hasSlides && win.slides.length > 1) {
+        console.log(`[DEBUG] Detected ${win.slides.length} dynamic slides, extracting...`);
+        return await this.extractDynamicSlides(win, doc);
+      }
+
+      // 如果有幻灯片计数器显示多页，但静态 DOM 只有一个
+      if (hasTotalSlides && staticSlideCount <= 1) {
+        const totalSlides = parseInt(totalSlidesElement.textContent);
+        console.log(`[DEBUG] Detected ${totalSlides} slides from counter, trying to extract...`);
+        return await this.extractSlidesWithNavigation(win, doc, totalSlides);
+      }
+
+      return null;
+    } catch (error) {
+      console.warn('Dynamic slide detection failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * 从 JavaScript slides 数组中提取幻灯片
+   * @param {Window} win - iframe 的 window 对象
+   * @param {Document} doc - iframe 的 document 对象
+   * @returns {Promise<Array<SlideData>>} 幻灯片数据数组
+   */
+  async extractDynamicSlides(win, doc) {
+    const slides = [];
+    const totalSlides = win.slides.length;
+
+    for (let i = 0; i < totalSlides; i++) {
+      try {
+        // 调用渲染函数显示当前幻灯片
+        if (typeof win.renderSlide === 'function') {
+          win.renderSlide(i);
+          // 等待渲染完成
+          await new Promise(r => setTimeout(r, 300));
+        }
+
+        // 解析当前显示的幻灯片
+        const slideElement = doc.querySelector('.slide');
+        if (slideElement) {
+          const slideData = this.htmlParser.parseSlideElement(slideElement, i);
+          slideData.title = win.slides[i]?.title || slideData.title || `Slide ${i + 1}`;
+          slides.push(slideData);
+          console.log(`[DEBUG] Extracted slide ${i + 1}/${totalSlides}: ${slideData.title}`);
+        }
+      } catch (error) {
+        console.warn(`Failed to extract slide ${i + 1}:`, error);
+      }
+    }
+
+    return slides;
+  }
+
+  /**
+   * 通过模拟导航按钮提取所有幻灯片
+   * @param {Window} win - iframe 的 window 对象
+   * @param {Document} doc - iframe 的 document 对象
+   * @param {number} totalSlides - 总幻灯片数
+   * @returns {Promise<Array<SlideData>>} 幻灯片数据数组
+   */
+  async extractSlidesWithNavigation(win, doc, totalSlides) {
+    const slides = [];
+
+    // 尝试找到导航函数
+    const hasNextSlide = typeof win.nextSlide === 'function';
+    const hasPrevSlide = typeof win.prevSlide === 'function';
+    const hasRenderSlide = typeof win.renderSlide === 'function';
+
+    // 先回到第一页
+    if (hasRenderSlide) {
+      win.renderSlide(0);
+      await new Promise(r => setTimeout(r, 300));
+    }
+
+    for (let i = 0; i < totalSlides; i++) {
+      try {
+        // 如果有 renderSlide 函数，直接跳转
+        if (hasRenderSlide) {
+          win.renderSlide(i);
+          await new Promise(r => setTimeout(r, 300));
+        } else if (i > 0 && hasNextSlide) {
+          // 否则使用 nextSlide
+          win.nextSlide();
+          await new Promise(r => setTimeout(r, 300));
+        }
+
+        // 解析当前显示的幻灯片
+        const slideElement = doc.querySelector('.slide');
+        if (slideElement) {
+          const slideData = this.htmlParser.parseSlideElement(slideElement, i);
+          slides.push(slideData);
+          console.log(`[DEBUG] Extracted slide ${i + 1}/${totalSlides}: ${slideData.title}`);
+        }
+      } catch (error) {
+        console.warn(`Failed to extract slide ${i + 1}:`, error);
+      }
+    }
+
+    return slides;
   }
 }
 

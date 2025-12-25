@@ -1414,4 +1414,60 @@
 - 代码测试: ✅ 通过 (49/49)
 - E2E 测试: ✅ 通过
 
-**下一步**: Git 提交并推送
+---
+
+### [2024-12-25 23:30] - Session 20
+
+**当前功能**: 支持动态渲染幻灯片识别
+
+**遇到的问题**:
+
+1. **用户上传 SAP_PPM_Presentation.html（20页）只识别到 1 页**
+   - 现象: 包含 20 页幻灯片的 HTML 文件，转换后只有 1 页
+   - 根本原因: HTML 使用 **JavaScript 动态渲染**幻灯片
+   - 分析结果:
+     - 幻灯片数据存储在 `const slides = [...]` JavaScript 数组中（20个对象）
+     - 只有一个 `<div class="slide active">` 静态元素
+     - 通过 `renderSlide(index)` 函数动态切换内容
+     - 当前的 HtmlParser.extractSlides() 只识别静态 DOM 元素
+
+**解决方案**:
+
+在 HtmlToPptConverter.renderAndParse() 中添加动态幻灯片检测和提取：
+
+1. **detectAndExtractDynamicSlides()**:
+   - 检测 `window.slides` 数组是否存在且长度 > 1
+   - 检测 `window.renderSlide` 函数是否存在
+   - 检测幻灯片计数器（如 `#total-slides`）显示的总数
+   - 比较静态 `.slide` 元素数量与预期总数
+
+2. **extractDynamicSlides()**:
+   - 遍历 `window.slides` 数组
+   - 对每一页调用 `renderSlide(i)` 渲染到 DOM
+   - 等待 300ms 确保渲染完成
+   - 使用 HtmlParser.parseSlideElement() 解析当前显示的幻灯片
+
+3. **extractSlidesWithNavigation()**:
+   - 备用方案：通过 `nextSlide()` 函数模拟翻页
+   - 适用于有导航函数但无 slides 数组的情况
+
+**修改内容**:
+
+1. `src/core/HtmlToPptConverter.js`:
+   - `renderAndParse()`: 调用 `detectAndExtractDynamicSlides()` 检测动态幻灯片
+   - 新增 `detectAndExtractDynamicSlides(win, doc)`: 检测动态幻灯片
+   - 新增 `extractDynamicSlides(win, doc)`: 遍历提取所有幻灯片
+   - 新增 `extractSlidesWithNavigation(win, doc, total)`: 通过导航提取
+
+**技术细节**:
+- 检测条件: `typeof win.slides !== 'undefined' && Array.isArray(win.slides)`
+- 渲染等待: 每页等待 300ms 确保图片/样式加载
+- 使用原始 slides 数组的 title 字段填充幻灯片标题
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- E2E 测试: ✅ 通过 (5/5)
+
+**Git 提交**: 待提交
+
+**下一步**: 用户手动测试 SAP_PPM_Presentation.html 验证 20 页识别
