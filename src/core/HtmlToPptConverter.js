@@ -191,7 +191,7 @@ export class HtmlToPptConverter {
    */
   async renderFontIconToImage(element, doc) {
     // 在文档中查找对应的图标元素
-    const iconElements = doc.querySelectorAll('.material-icons, .material-icons-outlined, .material-icons-round, .material-icons-sharp, .material-symbols-outlined, .fa, .fas, .far, .fab, .bi, .mdi, i[class*="icon"]');
+    const iconElements = doc.querySelectorAll('.material-icons, .material-icons-outlined, .material-icons-round, .material-icons-sharp, .material-symbols-outlined, .material-symbols-rounded, .material-symbols-sharp, .fa, .fas, .far, .fab, .bi, .mdi, i[class*="icon"]');
 
     // 获取图标名称用于精确匹配（优先使用 iconName，这是在 HtmlParser 中保存的原始图标文本）
     const elementText = element.iconName || element.content?.trim() || element.textContent?.trim() || '';
@@ -345,10 +345,10 @@ export class HtmlToPptConverter {
 
   /**
    * 将 DOM 元素捕获为图片
-   * 对于字体图标，生成 SVG 图标
+   * 优先使用 Canvas 直接渲染字体图标，如果失败则使用预定义的 SVG 路径
    * @param {Element} element - DOM 元素
    * @param {Document} doc - 元素所在的文档
-   * @returns {Promise<string|null>} base64 图片数据（SVG 格式）
+   * @returns {Promise<string|null>} base64 图片数据
    */
   async captureElementToImage(element, doc) {
     try {
@@ -356,36 +356,123 @@ export class HtmlToPptConverter {
       const computedStyle = doc.defaultView.getComputedStyle(element);
 
       // 获取元素尺寸（至少 48x48）
-      const width = Math.max(rect.width, 48);
-      const height = Math.max(rect.height, 48);
+      const width = Math.max(Math.ceil(rect.width), 48);
+      const height = Math.max(Math.ceil(rect.height), 48);
 
       // 获取文本内容和样式
       const text = element.textContent?.trim() || '';
       const color = computedStyle.color || '#ffffff';
+      const fontFamily = computedStyle.fontFamily || 'Material Symbols Outlined';
+      const fontSize = parseFloat(computedStyle.fontSize) || 24;
 
-      // 尝试查找预定义的 Material Icon 路径
-      const iconPath = HtmlToPptConverter.MATERIAL_ICON_PATHS[text];
-
-      let svgContent;
-      if (iconPath) {
-        // 使用预定义的 SVG 路径
-        svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 24 24">
-          <path d="${iconPath}" fill="${color}"/>
-        </svg>`;
-      } else {
-        // 创建一个占位符圆形图标
-        svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" fill="none" stroke="${color}" stroke-width="2"/>
-          <text x="12" y="16" text-anchor="middle" font-size="10" fill="${color}">?</text>
-        </svg>`;
-        console.warn(`Unknown icon: "${text}", using placeholder`);
+      // 方法1：尝试使用 Canvas 直接渲染字体图标
+      const canvasResult = await this.renderIconWithCanvas(text, width, height, color, fontFamily, fontSize, doc);
+      if (canvasResult) {
+        return canvasResult;
       }
 
-      // 返回 SVG data URL
-      const svgBase64 = btoa(unescape(encodeURIComponent(svgContent)));
+      // 方法2：尝试查找预定义的 Material Icon 路径
+      const iconPath = HtmlToPptConverter.MATERIAL_ICON_PATHS[text];
+      if (iconPath) {
+        const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 24 24">
+          <path d="${iconPath}" fill="${color}"/>
+        </svg>`;
+        const svgBase64 = btoa(unescape(encodeURIComponent(svgContent)));
+        return `data:image/svg+xml;base64,${svgBase64}`;
+      }
+
+      // 方法3：创建一个带图标名称的占位符
+      console.warn(`Unknown icon: "${text}", using text placeholder`);
+      const placeholderSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+        <rect width="${width}" height="${height}" fill="none" stroke="${color}" stroke-width="1" rx="4"/>
+        <text x="${width/2}" y="${height/2 + 4}" text-anchor="middle" font-size="10" fill="${color}">${text.substring(0, 8)}</text>
+      </svg>`;
+      const svgBase64 = btoa(unescape(encodeURIComponent(placeholderSvg)));
       return `data:image/svg+xml;base64,${svgBase64}`;
     } catch (error) {
       console.warn('Failed to capture element to image:', error);
+      return null;
+    }
+  }
+
+  /**
+   * 使用 Canvas 渲染字体图标
+   * @param {string} iconText - 图标文本（如 "home", "settings"）
+   * @param {number} width - 画布宽度
+   * @param {number} height - 画布高度
+   * @param {string} color - 图标颜色
+   * @param {string} fontFamily - 字体族
+   * @param {number} fontSize - 字体大小
+   * @param {Document} doc - 文档对象
+   * @returns {Promise<string|null>} base64 图片数据
+   */
+  async renderIconWithCanvas(iconText, width, height, color, fontFamily, fontSize, doc) {
+    try {
+      // 清理字体名称
+      const cleanFontFamily = fontFamily.replace(/"/g, '').trim();
+
+      // 确保字体已加载
+      if (doc.fonts && doc.fonts.ready) {
+        await doc.fonts.ready;
+
+        // 额外等待一小段时间确保字体完全可用
+        await new Promise(r => setTimeout(r, 100));
+      }
+
+      // 创建 Canvas
+      const canvas = doc.createElement('canvas');
+      const scale = 2; // 高清渲染
+      canvas.width = width * scale;
+      canvas.height = height * scale;
+      const ctx = canvas.getContext('2d');
+
+      // 设置高清缩放
+      ctx.scale(scale, scale);
+
+      // 清空画布（透明背景）
+      ctx.clearRect(0, 0, width, height);
+
+      // 设置字体 - 使用 Material Symbols 字体
+      ctx.font = `${fontSize}px "${cleanFontFamily}"`;
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // 绘制文字
+      ctx.fillText(iconText, width / 2, height / 2);
+
+      // 检查是否成功渲染（不是空白或方块）
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      let hasContent = false;
+      let hasVariety = false;
+      let pixelCount = 0;
+      let lastAlpha = 0;
+
+      // 检查是否有实际内容（不是全透明，也不是简单的方块）
+      for (let i = 0; i < data.length; i += 4) {
+        const alpha = data[i + 3];
+        if (alpha > 10) {
+          hasContent = true;
+          pixelCount++;
+          if (lastAlpha > 0 && Math.abs(alpha - lastAlpha) > 20) {
+            hasVariety = true;
+          }
+          lastAlpha = alpha;
+        }
+      }
+
+      // 如果像素太少或没有变化，可能是渲染失败（显示为方块或空白）
+      const minPixels = (width * height * scale * scale) * 0.01; // 至少1%的像素
+      if (!hasContent || pixelCount < minPixels) {
+        console.warn(`Canvas render may have failed for "${iconText}" (pixels: ${pixelCount})`);
+        return null;
+      }
+
+      // 返回 PNG 数据
+      return canvas.toDataURL('image/png');
+    } catch (error) {
+      console.warn('Canvas rendering failed:', error);
       return null;
     }
   }

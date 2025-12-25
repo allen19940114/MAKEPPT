@@ -822,4 +822,64 @@
 - 代码测试: ✅ 通过 (49/49)
 - 浏览器测试: ✅ 通过 (5/5)
 
+**Git 提交**: pending
+
+---
+
+### [2024-12-25 23:30] - Session 18
+
+**当前功能**: 使用 Canvas 直接渲染 Material Symbols 字体图标
+
+**遇到的问题**:
+
+1. **预定义 SVG 路径方案不可扩展**
+   - 现象: 每次遇到新图标都需要手动添加 SVG 路径
+   - 原因: Material Symbols 有数千个图标，无法全部预定义
+   - 用户反馈: "不是说不使用 MATERIAL_ICON_ 而是使用谷歌的 Material Symbols 吗"
+
+2. **Canvas 字体渲染失败**
+   - 原因: Canvas 渲染时字体可能还未加载完成
+   - 导致: 图标渲染为空白或方块
+
+**解决方案**:
+
+1. **改进 Canvas 字体渲染策略**:
+   - 优先使用 Canvas 直接渲染 Material Symbols 字体
+   - 等待 `document.fonts.ready` 确保字体加载完成
+   - 额外等待 100ms 确保字体完全可用
+   - 检查渲染结果（像素分析）判断是否成功
+
+2. **渲染优先级**:
+   - 方法1: Canvas 直接渲染字体图标（优先）
+   - 方法2: 使用预定义的 SVG 路径（备用）
+   - 方法3: 显示图标名称占位符（最后）
+
+3. **更新选择器支持所有 Material Symbols 变体**:
+   - `.material-symbols-outlined`
+   - `.material-symbols-rounded`
+   - `.material-symbols-sharp`
+
+**修改内容**:
+
+1. `src/core/HtmlToPptConverter.js`:
+   - `captureElementToImage()`: 优先使用 Canvas 渲染，备用 SVG 路径
+   - `renderIconWithCanvas()`: 新增方法
+     - 等待字体加载 (`doc.fonts.ready`)
+     - 使用 2x 缩放高清渲染
+     - 检查像素数据判断渲染是否成功
+     - 返回 PNG data URL
+   - `renderFontIconToImage()`: 更新选择器包含所有 Material Symbols 类
+
+**测试结果**:
+- Material Symbols 图标测试: ✅ 6/6 个图标成功渲染为 PNG
+- 用户测试数据测试: ✅ 21/21 个图标实例成功渲染
+- 唯一图标类型: ✅ 20/20 个类型全部成功
+- e2e 测试: ✅ 通过 (5/5)
+
+**验证图标列表**:
+- trending_up, visibility, inventory, gavel, arrow_upward
+- train, water, flight, cloud_off, warning
+- account_tree, hub, map, agriculture, inventory_2
+- payments, school, groups, translate, handshake
+
 **下一步**: Git 提交并推送
