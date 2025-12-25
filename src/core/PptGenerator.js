@@ -677,6 +677,8 @@ export class PptGenerator {
     const shapeStyles = this.styleConverter.convertShapeStyles(element.styles);
 
     // 如果有渐变图片数据（由 HtmlToPptConverter 预渲染），使用图片
+    // 注意：Canvas 已经绘制了正确的圆角，不需要 PptxGenJS 的 rounding
+    // rounding: true 会将图片裁剪成椭圆，这不是我们想要的
     if (element.gradientImageData) {
       try {
         slide.addImage({
@@ -684,8 +686,7 @@ export class PptGenerator {
           x: position.x,
           y: position.y,
           w: position.w || 2,
-          h: position.h || 1,
-          rounding: element.styles?.borderRadius ? true : false
+          h: position.h || 1
         });
         return;
       } catch (e) {

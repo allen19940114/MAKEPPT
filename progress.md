@@ -1356,4 +1356,25 @@
 - E2E 测试: ✅ 通过
 - 圆角值: 20.0%（从 57.6% 降低）
 
+---
+
+### [2024-12-25 22:20] - Session 18 补充
+
+**遇到的问题**:
+- 渐变图片使用 `rounding: true` 导致被裁剪成椭圆形状
+- PptxGenJS 的 `rounding` 参数只是布尔值，会将图片裁剪成椭圆
+
+**解决方案**:
+- 移除 `rounding` 参数，因为 Canvas 已经绘制了正确的圆角 PNG 图片
+- 渐变图片容器从 `ellipse` 变为 `rect`，圆角效果由图片本身提供
+
+**修改内容**:
+- `src/core/PptGenerator.js`: 移除 `addImage` 的 `rounding` 参数
+
+**测试结果**:
+- roundRect: 1（红色矩形）
+- rect: 1（渐变图片容器）
+- ellipse: 1（黄色圆形）
+- 图片: 1（渐变）
+
 **下一步**: Git 提交并推送
