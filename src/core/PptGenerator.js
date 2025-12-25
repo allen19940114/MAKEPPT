@@ -724,11 +724,12 @@ export class PptGenerator {
 
     // 尝试确定形状类型
     let shapeType = 'rect';
-    const radius = this.styleConverter.parseBorderRadius(element.styles.borderRadius);
+    // parseBorderRadius 返回像素值
+    const radiusPx = this.styleConverter.parseBorderRadius(element.styles.borderRadius);
 
-    if (radius > 0 && element.position.width === element.position.height) {
-      // 正方形 + 大圆角 = 圆形
-      if (radius >= element.position.width / 2) {
+    if (radiusPx > 0 && element.position.width === element.position.height) {
+      // 正方形 + 大圆角 = 圆形（比较像素值）
+      if (radiusPx >= element.position.width / 2) {
         shapeType = 'ellipse';
       }
     }

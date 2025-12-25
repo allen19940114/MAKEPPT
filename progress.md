@@ -1056,4 +1056,48 @@
 **测试结果**:
 - 代码测试: ✅ 通过 (49/49)
 
+**Git 提交**: `ba86de0` - fix: 修复圆角、渐变和字体大小失真问题
+
+---
+
+### [2024-12-25 20:30] - Session 13
+
+**当前功能**: 修复圆角和图片显示问题
+
+**遇到的问题**:
+
+1. **圆角仍然不显示**
+   - 原因: `parseBorderRadius()` 返回英寸值，但 `convertShapeStyles()` 又调用 `pxToInches()` 导致双重转换
+   - 导致: 圆角值变得极小（10px → 0.104 英寸 → 0.001 英寸）
+
+2. **图片显示为灰色矩形**
+   - 原因: 未知图标时生成了占位符 SVG（带灰色边框的矩形）
+   - 导致: PPT 中出现灰色空白矩形
+
+**解决方案**:
+
+1. **修复圆角双重转换** (`StyleConverter.js`):
+   - `parseBorderRadius()` 现在返回**像素值**（不转换）
+   - `convertShapeStyles()` 统一调用 `pxToInches()` 转换
+   - 降低最小圆角限制从 0.05 到 0.02 英寸
+
+2. **修复图标占位符** (`HtmlToPptConverter.js`):
+   - 未知图标不再生成占位符 SVG
+   - 直接返回 null，让 PptGenerator 跳过该元素
+
+**修改内容**:
+
+1. `src/core/StyleConverter.js`:
+   - `parseBorderRadius()`: 返回像素值，不进行转换
+   - `convertShapeStyles()`: 使用变量名 `radiusPx` 明确表示像素值
+
+2. `src/core/PptGenerator.js`:
+   - `addShapeElement()`: 更新变量名为 `radiusPx`
+
+3. `src/core/HtmlToPptConverter.js`:
+   - `captureElementToImage()`: 未知图标返回 null，不生成占位符
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+
 **下一步**: Git 提交并推送

@@ -244,12 +244,13 @@ export class StyleConverter {
   /**
    * 解析边框圆角
    * @param {string} borderRadius - CSS 边框圆角
-   * @returns {number} 圆角半径 (英寸)
+   * @returns {number} 圆角半径 (像素值，不转换)
    */
   parseBorderRadius(borderRadius) {
     if (!borderRadius) return 0;
     const value = parseFloat(borderRadius);
-    return this.pxToInches(value);
+    // 返回像素值，在 convertShapeStyles 中统一转换为英寸
+    return value;
   }
 
   /**
@@ -413,12 +414,12 @@ export class StyleConverter {
     }
 
     // 圆角 - 转换为英寸单位（PptxGenJS 需要英寸）
-    const radius = this.parseBorderRadius(styles.borderRadius);
-    if (radius > 0) {
-      // radius 是像素值，转换为英寸
-      const radiusInches = this.pxToInches(radius);
-      // 限制圆角范围：最小 0.05 英寸，最大 0.5 英寸
-      config.rectRadius = Math.max(0.05, Math.min(radiusInches, 0.5));
+    const radiusPx = this.parseBorderRadius(styles.borderRadius);
+    if (radiusPx > 0) {
+      // radiusPx 是像素值，转换为英寸
+      const radiusInches = this.pxToInches(radiusPx);
+      // 限制圆角范围：最小 0.02 英寸，最大 0.5 英寸
+      config.rectRadius = Math.max(0.02, Math.min(radiusInches, 0.5));
     }
 
     // 透明度

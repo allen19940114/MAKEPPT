@@ -381,14 +381,9 @@ export class HtmlToPptConverter {
         return `data:image/svg+xml;base64,${svgBase64}`;
       }
 
-      // 方法3：创建一个带图标名称的占位符
-      console.warn(`Unknown icon: "${text}", using text placeholder`);
-      const placeholderSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-        <rect width="${width}" height="${height}" fill="none" stroke="${color}" stroke-width="1" rx="4"/>
-        <text x="${width/2}" y="${height/2 + 4}" text-anchor="middle" font-size="10" fill="${color}">${text.substring(0, 8)}</text>
-      </svg>`;
-      const svgBase64 = btoa(unescape(encodeURIComponent(placeholderSvg)));
-      return `data:image/svg+xml;base64,${svgBase64}`;
+      // 方法3：跳过未知图标，不返回占位符（避免灰色矩形）
+      console.warn(`Unknown icon: "${text}", skipping`);
+      return null;
     } catch (error) {
       console.warn('Failed to capture element to image:', error);
       return null;
