@@ -93,8 +93,9 @@ export class HtmlToPptConverter {
           iframeDoc.write(htmlString);
           iframeDoc.close();
 
-          // 等待样式和字体加载
-          await new Promise(r => setTimeout(r, 500));
+          // 等待样式、脚本和字体加载
+          // 动态幻灯片的 JavaScript 需要时间执行
+          await new Promise(r => setTimeout(r, 1000));
 
           // 等待字体加载完成
           if (iframeDoc.fonts && iframeDoc.fonts.ready) {
@@ -107,6 +108,9 @@ export class HtmlToPptConverter {
               console.warn('Font loading timeout:', e);
             }
           }
+
+          // 再等待一下确保脚本执行完成
+          await new Promise(r => setTimeout(r, 500));
 
           // 检测是否为动态幻灯片（JavaScript 渲染的幻灯片）
           const dynamicSlides = await this.detectAndExtractDynamicSlides(iframe.contentWindow, iframeDoc);
@@ -1182,17 +1186,29 @@ export class HtmlToPptConverter {
   async detectAndExtractDynamicSlides(win, doc) {
     try {
       // 检测是否存在 slides 数组和 renderSlide 函数
-      const hasSlides = typeof win.slides !== 'undefined' && Array.isArray(win.slides);
-      const hasRenderSlide = typeof win.renderSlide === 'function';
+      let hasSlides = false;
+      let slidesLength = 0;
+      let hasRenderSlide = false;
+
+      try {
+        hasSlides = typeof win.slides !== 'undefined' && Array.isArray(win.slides);
+        if (hasSlides) {
+          slidesLength = win.slides.length;
+        }
+        hasRenderSlide = typeof win.renderSlide === 'function';
+      } catch (e) {
+        console.warn('[DEBUG] Cannot access iframe window properties (cross-origin?):', e);
+      }
 
       // 检测是否有幻灯片计数器（如 "1 / 20"）
       const totalSlidesElement = doc.getElementById('total-slides');
       const hasTotalSlides = totalSlidesElement && parseInt(totalSlidesElement.textContent) > 1;
+      const totalFromCounter = totalSlidesElement ? parseInt(totalSlidesElement.textContent) : 0;
 
       // 检测是否只有一个 .slide 元素但有多个幻灯片数据
       const staticSlideCount = doc.querySelectorAll('.slide').length;
 
-      console.log(`[DEBUG] Dynamic slide detection: hasSlides=${hasSlides}, hasRenderSlide=${hasRenderSlide}, hasTotalSlides=${hasTotalSlides}, staticSlideCount=${staticSlideCount}`);
+      console.log(`[DEBUG] Dynamic slide detection: hasSlides=${hasSlides}, slidesLength=${slidesLength}, hasRenderSlide=${hasRenderSlide}, hasTotalSlides=${hasTotalSlides}, totalFromCounter=${totalFromCounter}, staticSlideCount=${staticSlideCount}`);
 
       // 如果存在动态幻灯片数据
       if (hasSlides && win.slides.length > 1) {
