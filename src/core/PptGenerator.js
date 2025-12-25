@@ -684,11 +684,14 @@ export class PptGenerator {
       // 处理填充 - 区分渐变和纯色
       if (shapeStyles.fill) {
         if (shapeStyles.fill.type === 'linear' && shapeStyles.fill.stops && shapeStyles.fill.stops.length >= 2) {
-          // 渐变填充 - PptxGenJS 不直接支持形状渐变
-          // 使用渐变的结束色作为近似（通常更深的颜色）
+          // 渐变填充 - PptxGenJS 支持形状渐变
           const stops = shapeStyles.fill.stops;
-          const endColor = stops[stops.length - 1]?.color || '334155';
-          shapeOptions.fill = { color: endColor };
+          shapeOptions.fill = {
+            type: 'solid',
+            color: stops[stops.length - 1]?.color || '334155'
+          };
+          // 注意: PptxGenJS 形状渐变语法不同于幻灯片背景渐变
+          // 暂时使用纯色近似
         } else {
           shapeOptions.fill = shapeStyles.fill;
         }
@@ -699,17 +702,24 @@ export class PptGenerator {
         shapeOptions.line = shapeStyles.line;
       }
 
-      // 圆角（已在 convertShapeStyles 中转换为英寸）
-      if (shapeStyles.rectRadius) {
-        shapeOptions.rectRadius = shapeStyles.rectRadius;
-      }
-
       // 阴影
       if (shapeStyles.shadow) {
         shapeOptions.shadow = shapeStyles.shadow;
       }
 
-      slide.addShape('rect', shapeOptions);
+      // 确定形状类型：有圆角使用 roundRect，否则使用 rect
+      let shapeType = 'rect';
+      if (shapeStyles.rectRadius && shapeStyles.rectRadius > 0) {
+        shapeType = 'roundRect';
+        // rectRadius 在 PptxGenJS 中是 0-1 之间的比例值
+        // 计算圆角比例：圆角像素 / 较短边的一半
+        const shortSide = Math.min(position.w || 2, position.h || 1);
+        // 将英寸值转换为比例（相对于较短边）
+        const radiusRatio = Math.min(shapeStyles.rectRadius / (shortSide / 2), 1);
+        shapeOptions.rectRadius = Math.max(0.05, radiusRatio);
+      }
+
+      slide.addShape(shapeType, shapeOptions);
     }
   }
 
@@ -727,10 +737,18 @@ export class PptGenerator {
     // parseBorderRadius 返回像素值
     const radiusPx = this.styleConverter.parseBorderRadius(element.styles.borderRadius);
 
-    if (radiusPx > 0 && element.position.width === element.position.height) {
-      // 正方形 + 大圆角 = 圆形（比较像素值）
-      if (radiusPx >= element.position.width / 2) {
+    if (radiusPx > 0) {
+      if (element.position.width === element.position.height && radiusPx >= element.position.width / 2) {
+        // 正方形 + 大圆角 = 圆形
         shapeType = 'ellipse';
+      } else {
+        // 有圆角使用 roundRect
+        shapeType = 'roundRect';
+        // 计算圆角比例
+        const shortSide = Math.min(position.w || 1, position.h || 1);
+        const radiusInches = this.styleConverter.pxToInches(radiusPx);
+        const radiusRatio = Math.min(radiusInches / (shortSide / 2), 1);
+        shapeStyles.rectRadius = Math.max(0.05, radiusRatio);
       }
     }
 

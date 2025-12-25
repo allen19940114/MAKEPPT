@@ -1100,4 +1100,55 @@
 **测试结果**:
 - 代码测试: ✅ 通过 (49/49)
 
+**Git 提交**: `677457d` - fix: 修复圆角双重转换和图标占位符问题
+
+---
+
+### [2024-12-25 21:00] - Session 14
+
+**当前功能**: 修复圆角形状类型问题
+
+**遇到的问题**:
+
+1. **圆角仍然不显示**
+   - 根本原因: PptxGenJS 中普通 `'rect'` 形状不支持 `rectRadius`
+   - 必须使用 `'roundRect'` 形状类型才能显示圆角
+   - `rectRadius` 值应该是 0-1 之间的比例值，而不是英寸值
+
+2. **渐变不显示**
+   - 原因: PptxGenJS **不原生支持形状渐变填充**
+   - 这是已知限制（GitHub Issue #102）
+   - 只能使用纯色近似
+
+3. **图片问题**
+   - blob URL 图片被跳过（PptxGenJS 不支持）
+   - 远程 URL 图片可能因跨域问题无法加载
+
+**解决方案**:
+
+1. **修复圆角** (`PptGenerator.js`):
+   - `addContainerElement()`: 有圆角时使用 `'roundRect'` 形状
+   - `addShapeElement()`: 同样使用 `'roundRect'`
+   - 计算 `rectRadius` 比例值: `radiusInches / (shortSide / 2)`
+
+2. **渐变处理**:
+   - PptxGenJS 不支持形状渐变，使用渐变结束色作为纯色填充
+
+**修改内容**:
+
+1. `src/core/PptGenerator.js`:
+   - `addContainerElement()`:
+     - 有圆角时使用 `shapeType = 'roundRect'`
+     - 计算圆角比例值 (0-1)
+   - `addShapeElement()`:
+     - 有圆角时使用 `'roundRect'`
+     - 计算圆角比例值
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+
+**技术说明**:
+- PptxGenJS 圆角参考: https://gitbrent.github.io/PptxGenJS/docs/api-shapes/
+- 渐变限制: https://github.com/gitbrent/PptxGenJS/issues/102
+
 **下一步**: Git 提交并推送
