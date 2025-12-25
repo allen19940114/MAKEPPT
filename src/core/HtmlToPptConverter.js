@@ -113,6 +113,9 @@ export class HtmlToPptConverter {
           // 捕获字体图标为图片
           await this.captureFontIcons(slides, iframeDoc);
 
+          // 捕获渐变背景为图片（PptxGenJS 不支持形状渐变填充）
+          await this.captureGradients(slides, iframeDoc);
+
           // 创建临时的 PptGenerator 来计算缩放参数
           const generatorOptions = {
             ...this.options,
@@ -155,6 +158,123 @@ export class HtmlToPptConverter {
     for (const slide of slides) {
       await this.captureIconsInElements(slide.elements, doc);
     }
+  }
+
+  /**
+   * 捕获渐变背景为图片
+   * @param {Array<SlideData>} slides - 幻灯片数据
+   * @param {Document} doc - 渲染后的文档
+   */
+  async captureGradients(slides, doc) {
+    for (const slide of slides) {
+      await this.captureGradientsInElements(slide.elements, doc);
+    }
+  }
+
+  /**
+   * 递归捕获元素中的渐变背景
+   * @param {Array} elements - 元素数组
+   * @param {Document} doc - 渲染后的文档
+   */
+  async captureGradientsInElements(elements, doc) {
+    for (const element of elements) {
+      // 如果是容器且有渐变背景，捕获为图片
+      if (element.type === 'container' &&
+          element.styles?.backgroundImage?.includes('gradient')) {
+        try {
+          const gradientImage = await this.renderGradientToImage(element, doc);
+          if (gradientImage) {
+            element.gradientImageData = gradientImage;
+          }
+        } catch (error) {
+          console.warn('Failed to capture gradient:', error);
+        }
+      }
+
+      // 递归处理子元素
+      if (element.children && element.children.length > 0) {
+        await this.captureGradientsInElements(element.children, doc);
+      }
+    }
+  }
+
+  /**
+   * 将渐变元素渲染为图片
+   * @param {Object} element - 元素数据
+   * @param {Document} doc - 渲染后的文档
+   * @returns {Promise<string|null>} base64 图片数据
+   */
+  async renderGradientToImage(element, doc) {
+    const width = element.position?.width || 200;
+    const height = element.position?.height || 100;
+    const borderRadius = element.styles?.borderRadius || '0';
+
+    // 使用 Canvas 绘制渐变
+    const canvas = doc.createElement('canvas');
+    canvas.width = width * 2; // 2x 高清
+    canvas.height = height * 2;
+    const ctx = canvas.getContext('2d');
+
+    // 解析渐变
+    const bgImage = element.styles.backgroundImage;
+    const gradientMatch = bgImage.match(/linear-gradient\((.+)\)$/);
+
+    if (gradientMatch) {
+      const gradientStr = gradientMatch[1];
+
+      // 解析方向
+      let angle = 180; // 默认从上到下
+      if (gradientStr.includes('to right')) angle = 90;
+      else if (gradientStr.includes('to left')) angle = 270;
+      else if (gradientStr.includes('to bottom')) angle = 180;
+      else if (gradientStr.includes('to top')) angle = 0;
+      else {
+        const angleMatch = gradientStr.match(/(\d+)deg/);
+        if (angleMatch) angle = parseInt(angleMatch[1]);
+      }
+
+      // 计算渐变起点和终点
+      const rad = (angle - 90) * Math.PI / 180;
+      const halfW = canvas.width / 2;
+      const halfH = canvas.height / 2;
+      const x1 = halfW - Math.cos(rad) * halfW;
+      const y1 = halfH - Math.sin(rad) * halfH;
+      const x2 = halfW + Math.cos(rad) * halfW;
+      const y2 = halfH + Math.sin(rad) * halfH;
+
+      const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+
+      // 解析颜色
+      const colorRegex = /(#[0-9A-Fa-f]{3,8}|rgba?\([^)]+\))/g;
+      const colors = [];
+      let match;
+      while ((match = colorRegex.exec(gradientStr)) !== null) {
+        colors.push(match[1]);
+      }
+
+      if (colors.length >= 2) {
+        colors.forEach((color, i) => {
+          gradient.addColorStop(i / (colors.length - 1), color);
+        });
+      } else {
+        return null;
+      }
+
+      // 绘制圆角矩形
+      const radius = parseInt(borderRadius) * 2 || 0;
+      ctx.beginPath();
+      if (radius > 0) {
+        ctx.roundRect(0, 0, canvas.width, canvas.height, radius);
+      } else {
+        ctx.rect(0, 0, canvas.width, canvas.height);
+      }
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      return canvas.toDataURL('image/png');
+    }
+
+    return null;
   }
 
   /**

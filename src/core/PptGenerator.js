@@ -672,7 +672,24 @@ export class PptGenerator {
     const position = this.calculatePosition(element.position);
     const shapeStyles = this.styleConverter.convertShapeStyles(element.styles);
 
-    // 如果容器有背景色、渐变或边框，添加一个形状
+    // 如果有渐变图片数据（由 HtmlToPptConverter 预渲染），使用图片
+    if (element.gradientImageData) {
+      try {
+        slide.addImage({
+          data: element.gradientImageData,
+          x: position.x,
+          y: position.y,
+          w: position.w || 2,
+          h: position.h || 1,
+          rounding: element.styles?.borderRadius ? true : false
+        });
+        return;
+      } catch (e) {
+        console.warn('Failed to add gradient image, falling back to shape:', e);
+      }
+    }
+
+    // 如果容器有背景色或边框，添加一个形状
     if (shapeStyles.fill || shapeStyles.line) {
       const shapeOptions = {
         x: position.x,
@@ -681,17 +698,12 @@ export class PptGenerator {
         h: position.h || 1
       };
 
-      // 处理填充 - 区分渐变和纯色
+      // 处理填充 - 由于 PptxGenJS 不支持形状渐变，渐变使用结束色近似
       if (shapeStyles.fill) {
         if (shapeStyles.fill.type === 'linear' && shapeStyles.fill.stops && shapeStyles.fill.stops.length >= 2) {
-          // 渐变填充 - PptxGenJS 支持形状渐变
-          const stops = shapeStyles.fill.stops;
-          shapeOptions.fill = {
-            type: 'solid',
-            color: stops[stops.length - 1]?.color || '334155'
-          };
-          // 注意: PptxGenJS 形状渐变语法不同于幻灯片背景渐变
-          // 暂时使用纯色近似
+          // PptxGenJS 不支持形状渐变填充，使用渐变结束色作为近似
+          const lastColor = shapeStyles.fill.stops[shapeStyles.fill.stops.length - 1].color;
+          shapeOptions.fill = { color: lastColor };
         } else {
           shapeOptions.fill = shapeStyles.fill;
         }

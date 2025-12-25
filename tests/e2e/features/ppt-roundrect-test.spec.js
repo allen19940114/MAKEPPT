@@ -114,6 +114,15 @@ test.describe('PPT 圆角效果测试', () => {
     console.log('\n=== 元素样式调试 ===');
     console.log(JSON.stringify(debugInfo, null, 2));
 
+    // 监听浏览器控制台输出
+    const consoleLogs = [];
+    page.on('console', msg => {
+      const text = msg.text();
+      if (text.includes('[DEBUG')) {
+        consoleLogs.push(text);
+      }
+    });
+
     // 点击转换按钮
     const convertBtn = page.locator('#convertBtn');
     await expect(convertBtn).toBeVisible({ timeout: 10000 });
@@ -126,6 +135,10 @@ test.describe('PPT 圆角效果测试', () => {
 
     console.log('PPT saved to:', pptPath);
     expect(fs.existsSync(pptPath)).toBe(true);
+
+    // 输出控制台日志
+    console.log('\n=== 浏览器控制台调试输出 ===');
+    consoleLogs.forEach(log => console.log(log));
 
     // 解压并分析 XML
     const extractDir = path.join(outputDir, 'pptx-extract');
@@ -149,10 +162,12 @@ test.describe('PPT 圆角效果测试', () => {
     const roundRectCount = (slideXml.match(/prst="roundRect"/g) || []).length;
     const rectCount = (slideXml.match(/prst="rect"/g) || []).length;
     const ellipseCount = (slideXml.match(/prst="ellipse"/g) || []).length;
+    const picCount = (slideXml.match(/<p:pic>/g) || []).length;
 
     console.log(`roundRect 数量: ${roundRectCount}`);
     console.log(`rect 数量: ${rectCount}`);
     console.log(`ellipse 数量: ${ellipseCount}`);
+    console.log(`图片（渐变）数量: ${picCount}`);
 
     // 检查 avLst (圆角调整值)
     const avLstMatches = slideXml.match(/<a:avLst>[\s\S]*?<\/a:avLst>/g);
@@ -172,9 +187,13 @@ test.describe('PPT 圆角效果测试', () => {
     console.log('\n=== slide1.xml 完整内容 ===');
     console.log(slideXml);
 
-    // 预期：至少有 1 个 roundRect 和 1 个 ellipse
-    // 注意：渐变矩形可能因为 PptxGenJS 不支持形状渐变而使用纯色近似
-    expect(roundRectCount + ellipseCount).toBeGreaterThanOrEqual(2);
+    // 预期：
+    // - 1 个 roundRect（红色矩形）
+    // - 1 个 ellipse（黄色圆形）
+    // - 1 个图片（渐变矩形，使用 Canvas 渲染）
+    expect(roundRectCount).toBe(1);
+    expect(ellipseCount).toBeGreaterThanOrEqual(1);
+    expect(picCount).toBe(1); // 渐变以图片形式添加
 
     // 清理解压目录
     fs.rmSync(extractDir, { recursive: true });

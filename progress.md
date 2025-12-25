@@ -1252,6 +1252,65 @@
 
 **技术限制说明**:
 - PptxGenJS 形状 `rectRadius` 内部有额外处理，输入 0.4 可能输出 57.6%
-- 背景渐变需要使用图片代替（暂未实现）
+- 背景渐变需要使用图片代替（Session 17 已实现）
 
-**下一步**: 用户测试验证圆角效果
+---
+
+### [2024-12-25 21:46] - Session 17
+
+**当前功能**: 实现渐变背景支持（使用 Canvas 渲染为图片）
+
+**遇到的问题**:
+
+1. **渐变效果不显示**
+   - 原因: PptxGenJS **不支持形状渐变填充**（`ShapeFillProps.type` 只支持 `'none' | 'solid'`）
+   - 调试发现: 虽然代码传递了正确的渐变参数，但生成的 XML 中没有 `<a:gradFill>`
+   - 参考: PptxGenJS 类型定义确认了这一限制
+
+**解决方案**:
+
+1. **使用 Canvas 渲染渐变为图片**:
+   - 在 `HtmlToPptConverter` 中添加 `captureGradients()` 方法
+   - 遍历所有容器元素，检测 `backgroundImage` 是否包含 `gradient`
+   - 使用 `renderGradientToImage()` 将渐变渲染为 PNG 图片
+   - 图片使用 2x 分辨率确保高清效果
+   - 支持圆角效果（使用 `ctx.roundRect()`）
+
+2. **PptGenerator 使用渐变图片**:
+   - `addContainerElement()` 优先检查 `element.gradientImageData`
+   - 如果有渐变图片数据，使用 `slide.addImage()` 添加
+   - 如果没有或失败，回退到使用渐变结束色的纯色形状
+
+**修改内容**:
+
+1. `src/core/HtmlToPptConverter.js`:
+   - 添加 `captureGradients()`: 捕获幻灯片中的渐变
+   - 添加 `captureGradientsInElements()`: 递归处理元素
+   - 添加 `renderGradientToImage()`: Canvas 渲染渐变
+     - 解析渐变方向（支持 `to right/left/top/bottom` 和角度）
+     - 解析渐变颜色（支持 hex 和 rgb/rgba）
+     - 支持圆角效果
+
+2. `src/core/PptGenerator.js`:
+   - `addContainerElement()`: 优先使用渐变图片数据
+   - 移除不支持的 `type: 'gradient'` 代码
+   - 渐变回退方案改为使用结束色
+
+3. `tests/e2e/features/ppt-roundrect-test.spec.js`:
+   - 添加图片数量检查 (`picCount`)
+   - 更新断言：1 roundRect + 1 ellipse + 1 图片（渐变）
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- E2E 测试: ✅ 通过 (5/5)
+- 渐变测试: ✅ 通过
+  - roundRect 数量: 1（红色矩形）
+  - ellipse 数量: 2（黄色圆形 + 渐变图片形状）
+  - 图片数量: 1（渐变矩形，400x200 PNG）
+
+**验证结果**:
+- 生成的 PPT 包含正确的渐变图片
+- 图片尺寸: 400x200（2x 高清）
+- 图片格式: PNG RGBA
+
+**下一步**: Git 提交并推送
