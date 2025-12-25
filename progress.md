@@ -788,4 +788,38 @@
 - 代码测试: ✅ 通过 (49/49)
 - 浏览器测试: ✅ 通过 (5/5)
 
+**Git 提交**: `de305b5` - feat: 扩展 Material Symbols 图标支持
+
+---
+
+### [2024-12-25 23:00] - Session 17
+
+**当前功能**: 添加更多 Material Symbols 图标支持
+
+**遇到的问题**:
+
+1. **测试数据中的图标仍显示问号**
+   - 现象: 更新测试数据后，很多图标仍然显示为问号
+   - 原因: 测试数据使用了更多的 Material Symbols 图标，这些图标不在预定义映射中
+
+2. **缺失的图标列表**:
+   - `trending_up`, `water`, `translate`, `map`
+   - `inventory`, `hub`, `handshake`, `groups`
+   - `gavel`, `cloud_off`
+
+**解决方案**:
+
+1. **添加缺失图标的 SVG 路径**:
+   - 使用标准 Material Icons SVG 路径数据
+   - 每个图标都是 24x24 viewBox 的 SVG 路径
+
+**修改内容**:
+
+1. `src/core/HtmlToPptConverter.js`:
+   - `MATERIAL_ICON_PATHS`: 添加 10 个新的图标 SVG 路径
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- 浏览器测试: ✅ 通过 (5/5)
+
 **下一步**: Git 提交并推送
