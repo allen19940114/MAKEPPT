@@ -1559,4 +1559,48 @@
 === PPT 幻灯片数量: 20 ===
 ```
 
+**Git 提交**: 待提交
+
+---
+
+### [2024-12-25 24:45] - Session 22
+
+**当前功能**: 修复 iframe JavaScript 执行等待问题
+
+**遇到的问题**:
+- 之前的修复虽然正确解析了 20 页幻灯片数据，但 `renderSlide` 函数不可用
+- 测试显示: `renderSlide 函数可用: false`
+- 原因: `document.write()` 写入 HTML 后，脚本需要时间执行
+
+**解决方案**:
+- 在 `extractSlidesFromParsedData()` 中添加等待脚本执行的逻辑
+- 添加重试循环：最多等待 10 次 × 500ms = 5 秒
+- 同时检查 `renderSlide` 函数和 `.slide` 元素的可用性
+
+**修改内容**:
+
+1. `src/core/HtmlToPptConverter.js`:
+   - `extractSlidesFromParsedData()`: 添加脚本执行等待逻辑
+   - 最多等待 10 次，每次 500ms
+   - 检查 `typeof win.renderSlide === 'function'`
+   - 检查 `doc.querySelector('.slide')` 存在
+
+**测试结果**:
+- E2E 测试: ✅ 通过
+- `renderSlide 函数可用: true`
+- 所有 20 页幻灯片正确提取
+
+**输出日志**:
+```
+[DEBUG] 找到 slides 数组，长度: 15909 字符
+[DEBUG] 解析出 20 个顶层幻灯片对象
+[DEBUG] 开始提取 20 页幻灯片...
+[DEBUG] renderSlide 函数可用: true
+[DEBUG] 已提取幻灯片 1/20: SAP PPM Solution Overview
+...
+[DEBUG] 已提取幻灯片 20/20: Q & A
+[DEBUG] 总共提取了 20 页幻灯片
+=== PPT 幻灯片数量: 20 ===
+```
+
 **下一步**: 提交代码并推送到远程仓库

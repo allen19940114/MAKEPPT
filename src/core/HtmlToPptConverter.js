@@ -1523,9 +1523,38 @@ export class HtmlToPptConverter {
 
     console.log(`[DEBUG] 开始提取 ${totalSlides} 页幻灯片...`);
 
-    // 检查是否有 renderSlide 函数
-    const hasRenderSlide = typeof win.renderSlide === 'function';
+    // 等待脚本执行完成 - 检查 renderSlide 函数是否可用
+    let hasRenderSlide = typeof win.renderSlide === 'function';
+
+    // 如果 renderSlide 不可用，等待更长时间让脚本执行
+    if (!hasRenderSlide) {
+      console.log(`[DEBUG] renderSlide 函数暂不可用，等待脚本执行...`);
+      for (let attempt = 0; attempt < 10; attempt++) {
+        await new Promise(r => setTimeout(r, 500));
+        hasRenderSlide = typeof win.renderSlide === 'function';
+        if (hasRenderSlide) {
+          console.log(`[DEBUG] renderSlide 函数已就绪 (尝试 ${attempt + 1} 次)`);
+          break;
+        }
+      }
+    }
+
     console.log(`[DEBUG] renderSlide 函数可用: ${hasRenderSlide}`);
+
+    // 检查 .slide 元素是否存在
+    let slideElement = doc.querySelector('.slide');
+    if (!slideElement && !hasRenderSlide) {
+      console.log(`[DEBUG] DOM 中没有 .slide 元素且 renderSlide 不可用，等待 DOM 加载...`);
+      for (let attempt = 0; attempt < 10; attempt++) {
+        await new Promise(r => setTimeout(r, 500));
+        slideElement = doc.querySelector('.slide');
+        hasRenderSlide = typeof win.renderSlide === 'function';
+        if (slideElement || hasRenderSlide) {
+          console.log(`[DEBUG] DOM 已就绪 (尝试 ${attempt + 1} 次)`);
+          break;
+        }
+      }
+    }
 
     for (let i = 0; i < totalSlides; i++) {
       try {
