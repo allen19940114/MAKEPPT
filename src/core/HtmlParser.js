@@ -260,6 +260,11 @@ export class HtmlParser {
   getElementType(element) {
     const tagName = element.tagName.toLowerCase();
 
+    // 检测是否为图标元素
+    if (this.isIconElement(element)) {
+      return 'icon';
+    }
+
     const typeMap = {
       'h1': 'heading',
       'h2': 'heading',
@@ -282,6 +287,41 @@ export class HtmlParser {
     };
 
     return typeMap[tagName] || 'generic';
+  }
+
+  /**
+   * 检测元素是否为图标元素
+   * @param {Element} element - DOM 元素
+   * @returns {boolean} 是否为图标
+   */
+  isIconElement(element) {
+    const tagName = element.tagName.toLowerCase();
+    const className = element.className || '';
+    const classStr = typeof className === 'string' ? className : '';
+
+    // 检测常见的图标类名
+    const iconClassPatterns = [
+      'icon', 'fa', 'fas', 'far', 'fab', 'material-icons',
+      'glyphicon', 'bi', 'feather', 'lucide', 'heroicon'
+    ];
+
+    for (const pattern of iconClassPatterns) {
+      if (classStr.includes(pattern)) {
+        return true;
+      }
+    }
+
+    // <i> 标签通常用于图标
+    if (tagName === 'i' && element.textContent.trim().length <= 2) {
+      return true;
+    }
+
+    // SVG 图标
+    if (tagName === 'svg') {
+      return true;
+    }
+
+    return false;
   }
 
   /**

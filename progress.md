@@ -382,4 +382,57 @@
 - 代码测试: ✅ 通过 (49/49)
 - 浏览器测试: ✅ 通过 (5/5)
 
+**Git 提交**: `8a87034` - fix: 修复PPT生成比例失真和文本换行问题
+
+---
+
+### [2024-12-25 15:00] - Session 9
+
+**当前功能**: 修复 PPT 显示问题（边框、图标、换行）
+
+**遇到的问题**:
+
+1. **文本错误添加有色边框**
+   - 原因: `convertBorder()` 只检查 `borderStyle !== 'none'`，
+     但浏览器默认给元素设置 `borderStyle: 'solid'` 即使 `borderWidth: 0`
+   - 解决:
+     - 在 `convertBorder()` 中检查 `borderWidth > 0`
+     - 在 `addTextElement()` 中不再给文本添加边框样式
+
+2. **图标被错误地以文字替代**
+   - 原因: 字体图标（Font Awesome 等）使用特殊 Unicode 字符，
+     被当作普通文本处理
+   - 解决:
+     - 在 `HtmlParser.getElementType()` 中添加 `isIconElement()` 检测
+     - 识别常见图标类名: icon, fa, fas, material-icons 等
+     - 在 `PptGenerator` 中跳过 `type === 'icon'` 的元素
+     - 添加 `isIconText()` 过滤 Private Use Area Unicode 字符
+
+3. **文本错误换行导致丑陋**
+   - 原因: 文本宽度估算不准确，太窄导致频繁换行
+   - 解决:
+     - 增大最小宽度限制到 2 英寸
+     - 长文本（>30字符）自动扩展宽度
+     - 改进字符宽度估算：中文 2 倍、英文 1 倍
+
+**修改内容**:
+
+1. `src/core/StyleConverter.js`:
+   - `convertBorder()`: 添加 `borderWidth > 0` 检查
+
+2. `src/core/HtmlParser.js`:
+   - 添加 `isIconElement()`: 检测图标元素
+   - `getElementType()`: 返回 'icon' 类型
+
+3. `src/core/PptGenerator.js`:
+   - `addElement()`: 跳过 'icon' 类型元素
+   - `addTextElement()`: 只添加非白色背景填充，不添加边框
+   - 添加 `isIconText()`: 检测图标 Unicode 字符
+   - `collectAllText()`: 过滤图标元素和字符
+   - 改进文本宽度估算逻辑
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- 浏览器测试: ✅ 通过 (5/5)
+
 **下一步**: Git 提交并推送

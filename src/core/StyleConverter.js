@@ -218,7 +218,13 @@ export class StyleConverter {
       return null;
     }
 
-    const width = parseFloat(styles.borderWidth) || 1;
+    const width = parseFloat(styles.borderWidth) || 0;
+
+    // 只有当边框宽度大于 0 时才返回边框配置
+    // 浏览器默认给元素设置 borderStyle: 'solid' 但 borderWidth: 0
+    if (width <= 0) {
+      return null;
+    }
 
     return {
       type: styles.borderStyle === 'dashed' ? 'dash' : 'solid',

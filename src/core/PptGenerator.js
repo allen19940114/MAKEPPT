@@ -198,9 +198,13 @@ export class PptGenerator {
       case 'shape':
         this.addShapeElement(slide, element);
         break;
+      case 'icon':
+        // 跳过图标元素 - 字体图标在 PPT 中无法正确显示
+        // 只处理子元素（如果有的话）
+        break;
       default:
-        // 默认作为文本处理
-        if (element.text) {
+        // 默认作为文本处理，但要过滤掉可能的图标字符
+        if (element.text && !this.isIconText(element.text)) {
           this.addTextElement(slide, element);
         }
     }
@@ -240,27 +244,39 @@ export class PptGenerator {
     let textWidth = position.w;
     let textHeight = position.h;
 
-    // 如果宽度太小或为0，根据文本内容和字号估算
+    // 计算文本的有效字符长度（考虑中英文）
+    let effectiveLength = 0;
+    for (const char of text) {
+      effectiveLength += char.charCodeAt(0) > 127 ? 2 : 1;
+    }
+
+    // 每个字符的平均宽度（英寸）- 基于字号
+    const avgCharWidthInches = fontSize / 72 * 0.55;
+
+    // 如果宽度太小或为0，根据文本内容估算合适的宽度
     if (textWidth <= 0.5) {
-      // 估算文本宽度：每个字符约 fontSize/72 英寸
-      const avgCharWidthInches = fontSize / 72 * 0.6;
-      // 计算文本长度，考虑中文字符（占更宽）
-      let effectiveLength = 0;
-      for (const char of text) {
-        effectiveLength += char.charCodeAt(0) > 127 ? 1.8 : 1;
-      }
-      textWidth = Math.min(effectiveLength * avgCharWidthInches, this.options.slideWidth * 0.85);
-      textWidth = Math.max(textWidth, 1.5); // 最小宽度1.5英寸
+      // 估算文本需要的宽度
+      const estimatedWidth = effectiveLength * avgCharWidthInches;
+      // 使用幻灯片宽度的 80% 作为最大宽度，确保文本有足够空间换行
+      const maxWidth = this.options.slideWidth * 0.8;
+      textWidth = Math.min(estimatedWidth, maxWidth);
+      textWidth = Math.max(textWidth, 2); // 最小宽度 2 英寸
+    }
+
+    // 如果文本很长，确保宽度足够大以便换行
+    if (effectiveLength > 30 && textWidth < 4) {
+      textWidth = Math.min(this.options.slideWidth * 0.8, 8);
     }
 
     // 确保高度合理 - 基于字号和文本行数估算
+    const lineHeight = (fontSize / 72) * 1.5; // 行高约 1.5 倍字号
     if (textHeight <= 0.3) {
-      const lineHeight = (fontSize / 72) * 1.4; // 行高约 1.4 倍字号
       // 估算行数
-      const charsPerLine = Math.floor(textWidth / (fontSize / 72 * 0.6));
-      const estimatedLines = Math.ceil(text.length / Math.max(charsPerLine, 10));
+      const charsPerLine = Math.floor(textWidth / avgCharWidthInches);
+      const estimatedLines = Math.ceil(effectiveLength / Math.max(charsPerLine, 15));
       textHeight = lineHeight * Math.max(estimatedLines, 1);
-      textHeight = Math.min(textHeight, this.options.slideHeight * 0.5); // 最大高度限制
+      textHeight = Math.max(textHeight, lineHeight); // 至少一行高度
+      textHeight = Math.min(textHeight, this.options.slideHeight * 0.6); // 最大高度限制
     }
 
     // 构建文本配置
@@ -283,10 +299,17 @@ export class PptGenerator {
       isTextBox: true
     };
 
-    // 如果有背景色或边框，添加形状样式
-    if (shapeStyles.fill || shapeStyles.line) {
-      Object.assign(textOptions, shapeStyles);
+    // 只在确实有明确背景色时才添加填充（排除透明和白色背景）
+    if (shapeStyles.fill && shapeStyles.fill.color) {
+      const bgColor = shapeStyles.fill.color.toUpperCase();
+      // 排除透明、白色、接近白色的背景
+      if (bgColor !== 'FFFFFF' && bgColor !== 'TRANSPARENT' && !bgColor.startsWith('FFF')) {
+        textOptions.fill = shapeStyles.fill;
+      }
     }
+
+    // 不给普通文本添加边框，除非是按钮等特殊元素
+    // shapeStyles.line 通常是浏览器默认值，不应用到文本
 
     slide.addText(text, textOptions);
   }
@@ -297,7 +320,17 @@ export class PptGenerator {
    * @returns {string} 文本内容
    */
   collectAllText(element) {
+    // 跳过图标元素
+    if (element.type === 'icon') {
+      return '';
+    }
+
     let text = element.text || '';
+
+    // 过滤掉图标字符
+    if (text && this.isIconText(text)) {
+      text = '';
+    }
 
     if (element.children) {
       for (const child of element.children) {
@@ -309,6 +342,31 @@ export class PptGenerator {
     }
 
     return text.trim();
+  }
+
+  /**
+   * 检测文本是否为图标字符
+   * @param {string} text - 文本内容
+   * @returns {boolean} 是否为图标字符
+   */
+  isIconText(text) {
+    if (!text || text.length > 3) return false;
+
+    // 常见的图标 Unicode 范围
+    // - Private Use Area: U+E000-U+F8FF (字体图标常用)
+    // - Font Awesome: U+F000-U+F8FF
+    // - Material Icons: U+E000-U+EB4C
+    for (const char of text) {
+      const code = char.charCodeAt(0);
+      // Private Use Area 和其他图标字符范围
+      if ((code >= 0xE000 && code <= 0xF8FF) ||
+          (code >= 0xF000 && code <= 0xFFFF) ||
+          (code >= 0x2600 && code <= 0x27BF)) { // Misc symbols
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**
