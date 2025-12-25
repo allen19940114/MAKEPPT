@@ -264,15 +264,19 @@ export class HtmlToPptConverter {
     if (gradientMatch) {
       const gradientStr = gradientMatch[1];
 
-      // 解析方向
+      // 解析方向（支持更多方向）
       let angle = 180; // 默认从上到下
-      if (gradientStr.includes('to right')) angle = 90;
+      if (gradientStr.includes('to bottom right')) angle = 135;
+      else if (gradientStr.includes('to bottom left')) angle = 225;
+      else if (gradientStr.includes('to top right')) angle = 45;
+      else if (gradientStr.includes('to top left')) angle = 315;
+      else if (gradientStr.includes('to right')) angle = 90;
       else if (gradientStr.includes('to left')) angle = 270;
       else if (gradientStr.includes('to bottom')) angle = 180;
       else if (gradientStr.includes('to top')) angle = 0;
       else {
-        const angleMatch = gradientStr.match(/(\d+)deg/);
-        if (angleMatch) angle = parseInt(angleMatch[1]);
+        const angleMatch = gradientStr.match(/(-?\d+(?:\.\d+)?)deg/);
+        if (angleMatch) angle = parseFloat(angleMatch[1]);
       }
 
       // 计算渐变起点和终点
@@ -286,17 +290,35 @@ export class HtmlToPptConverter {
 
       const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
 
-      // 解析颜色
-      const colorRegex = /(#[0-9A-Fa-f]{3,8}|rgba?\([^)]+\))/g;
-      const colors = [];
+      // 解析颜色和停止点位置
+      // 支持格式：rgb(r,g,b), rgba(r,g,b,a), #hex, 颜色名称 后跟可选的百分比
+      const colorStopRegex = /(#[0-9A-Fa-f]{3,8}|rgba?\([^)]+\)|[a-zA-Z]+)(?:\s+(\d+(?:\.\d+)?%?))?/g;
+      const colorStops = [];
       let match;
-      while ((match = colorRegex.exec(gradientStr)) !== null) {
-        colors.push(match[1]);
+      while ((match = colorStopRegex.exec(gradientStr)) !== null) {
+        const color = match[1];
+        // 跳过方向关键词
+        if (['to', 'right', 'left', 'top', 'bottom', 'deg'].includes(color.toLowerCase())) continue;
+        let position = match[2];
+        if (position) {
+          position = parseFloat(position) / 100;
+        }
+        colorStops.push({ color, position });
       }
 
-      if (colors.length >= 2) {
-        colors.forEach((color, i) => {
-          gradient.addColorStop(i / (colors.length - 1), color);
+      if (colorStops.length >= 2) {
+        // 填充缺失的位置
+        colorStops.forEach((stop, i) => {
+          if (stop.position === undefined) {
+            stop.position = i / (colorStops.length - 1);
+          }
+        });
+        colorStops.forEach(stop => {
+          try {
+            gradient.addColorStop(stop.position, stop.color);
+          } catch (e) {
+            // 忽略无效颜色
+          }
         });
       } else {
         return null;
@@ -305,7 +327,7 @@ export class HtmlToPptConverter {
       // 绘制圆角矩形
       const radius = parseInt(borderRadius) * 2 || 0;
       ctx.beginPath();
-      if (radius > 0) {
+      if (radius > 0 && ctx.roundRect) {
         ctx.roundRect(0, 0, canvas.width, canvas.height, radius);
       } else {
         ctx.rect(0, 0, canvas.width, canvas.height);
@@ -355,15 +377,19 @@ export class HtmlToPptConverter {
     if (gradientMatch) {
       const gradientStr = gradientMatch[1];
 
-      // 解析方向
+      // 解析方向（支持更多方向）
       let angle = 180;
-      if (gradientStr.includes('to right')) angle = 90;
+      if (gradientStr.includes('to bottom right')) angle = 135;
+      else if (gradientStr.includes('to bottom left')) angle = 225;
+      else if (gradientStr.includes('to top right')) angle = 45;
+      else if (gradientStr.includes('to top left')) angle = 315;
+      else if (gradientStr.includes('to right')) angle = 90;
       else if (gradientStr.includes('to left')) angle = 270;
       else if (gradientStr.includes('to bottom')) angle = 180;
       else if (gradientStr.includes('to top')) angle = 0;
       else {
-        const angleMatch = gradientStr.match(/(\d+)deg/);
-        if (angleMatch) angle = parseInt(angleMatch[1]);
+        const angleMatch = gradientStr.match(/(-?\d+(?:\.\d+)?)deg/);
+        if (angleMatch) angle = parseFloat(angleMatch[1]);
       }
 
       // 计算渐变起点和终点
@@ -377,17 +403,32 @@ export class HtmlToPptConverter {
 
       const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
 
-      // 解析颜色
-      const colorRegex = /(#[0-9A-Fa-f]{3,8}|rgba?\([^)]+\))/g;
-      const colors = [];
+      // 解析颜色和停止点位置
+      const colorStopRegex = /(#[0-9A-Fa-f]{3,8}|rgba?\([^)]+\)|[a-zA-Z]+)(?:\s+(\d+(?:\.\d+)?%?))?/g;
+      const colorStops = [];
       let match;
-      while ((match = colorRegex.exec(gradientStr)) !== null) {
-        colors.push(match[1]);
+      while ((match = colorStopRegex.exec(gradientStr)) !== null) {
+        const color = match[1];
+        if (['to', 'right', 'left', 'top', 'bottom', 'deg'].includes(color.toLowerCase())) continue;
+        let position = match[2];
+        if (position) {
+          position = parseFloat(position) / 100;
+        }
+        colorStops.push({ color, position });
       }
 
-      if (colors.length >= 2) {
-        colors.forEach((color, i) => {
-          gradient.addColorStop(i / (colors.length - 1), color);
+      if (colorStops.length >= 2) {
+        colorStops.forEach((stop, i) => {
+          if (stop.position === undefined) {
+            stop.position = i / (colorStops.length - 1);
+          }
+        });
+        colorStops.forEach(stop => {
+          try {
+            gradient.addColorStop(stop.position, stop.color);
+          } catch (e) {
+            // 忽略无效颜色
+          }
         });
       } else {
         return null;
@@ -1484,17 +1525,26 @@ export class HtmlToPptConverter {
           // 如果是顶层对象结束
           if (arrayDepth === 1 && objectDepth === 1 && currentObjectStart !== -1) {
             const objectStr = slidesArrayStr.substring(currentObjectStart, i + 1);
-            // 只从顶层对象中提取 id 和 title
+            // 从顶层对象中提取 id（可选）、title 或 type
             const idMatch = objectStr.match(/^\s*\{\s*(?:[^{}]*,)?\s*id:\s*(\d+)/);
             const titleMatch = objectStr.match(/title:\s*["']([^"']+)["']/);
+            const typeMatch = objectStr.match(/type:\s*["']([^"']+)["']/);
 
-            if (idMatch) {
-              slidesInfo.push({
-                id: parseInt(idMatch[1]),
-                title: titleMatch ? titleMatch[1] : `Slide ${slidesInfo.length + 1}`,
-                index: slidesInfo.length
-              });
+            // 只要是顶层对象就添加到幻灯片列表（不再要求 id 字段）
+            const slideIndex = slidesInfo.length;
+            let slideTitle = `Slide ${slideIndex + 1}`;
+            if (titleMatch) {
+              slideTitle = titleMatch[1];
+            } else if (typeMatch) {
+              slideTitle = typeMatch[1];
             }
+
+            slidesInfo.push({
+              id: idMatch ? parseInt(idMatch[1]) : slideIndex,
+              title: slideTitle,
+              type: typeMatch ? typeMatch[1] : null,
+              index: slideIndex
+            });
             currentObjectStart = -1;
           }
           objectDepth--;

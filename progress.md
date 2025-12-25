@@ -1689,3 +1689,66 @@
 
 **下一步**: Git 提交并推送
 
+---
+
+### [2024-12-25 15:30] - Session 25
+
+**当前功能**: 修复动态幻灯片识别 - 支持无 id 字段的 slides 数组
+
+**遇到的问题**:
+
+1. **SNTP_SAP_Transformation_Presentation.html 无法正确识别 20 页**
+   - 现象: 用户反馈该文件只识别出少量页面或完全无法识别
+   - 根本原因: `parseSlidesArrayFromHtml()` 函数要求每个幻灯片对象必须有 `id` 字段
+   - SNTP 文件的 slides 数组使用 `type` 和 `title` 字段，没有 `id` 字段：
+     ```javascript
+     const slides = [
+         { type: "hero", title: "Constructing Intelligence", ... },
+         { type: "context", title: "SNTP: National Infrastructure Leader", ... },
+         // 没有 id 字段！
+     ]
+     ```
+   - 之前的代码只在 `if (idMatch)` 条件满足时才添加幻灯片，导致全部跳过
+
+**解决方案**:
+
+1. **修改 `parseSlidesArrayFromHtml()` 函数**:
+   - 移除对 `id` 字段的强制要求
+   - 只要检测到顶层对象（`arrayDepth === 1 && objectDepth === 1`）就添加到幻灯片列表
+   - 优先使用 `title` 作为幻灯片名称，其次使用 `type`
+   - `id` 字段变为可选，如果不存在则使用 `index` 作为 id
+
+**修改内容**:
+
+1. `src/core/HtmlToPptConverter.js`:
+   - `parseSlidesArrayFromHtml()`:
+     - 添加 `typeMatch` 正则匹配 `type` 字段
+     - 移除 `if (idMatch)` 条件限制
+     - 优先级：title > type > "Slide N"
+     - 添加 `type` 属性到返回对象
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- E2E 测试: ✅ 通过 (5/5)
+- SNTP 解析测试: ✅ 正确识别 20 页幻灯片
+
+**验证输出**:
+```
+[DEBUG] 找到 slides 数组，长度: 8878 字符
+[DEBUG] 解析出 20 个顶层幻灯片对象
+
+前 5 页:
+  1 - Constructing Intelligence (type: hero)
+  2 - SNTP: National Infrastructure Leader (type: context)
+  3 - SAP Intelligent Enterprise Architecture (type: architecture)
+  4 - SNTP Solution Roadmap (type: solution-map)
+  5 - Project Systems (PS) (type: module-intro)
+
+后 5 页:
+  16 - Finance (FICO) (type: module-value)
+  17 - Implementation Methodology (type: methodology)
+  18 - Project Organization (type: team)
+  19 - Implementation Plan (2026) (type: timeline)
+  20 - Value Proposition (type: roi)
+```
+
