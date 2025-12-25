@@ -173,19 +173,58 @@ export class HtmlParser {
    */
   parseElement(element, depth) {
     const tagName = element.tagName.toLowerCase();
-    const rect = element.getBoundingClientRect ?
-      element.getBoundingClientRect() :
-      { x: 0, y: 0, width: 0, height: 0 };
+
+    // 获取元素位置和尺寸
+    let rect = { x: 0, y: 0, width: 0, height: 0 };
+
+    // 尝试使用 getBoundingClientRect（仅在实际渲染的 DOM 中有效）
+    if (element.getBoundingClientRect) {
+      const domRect = element.getBoundingClientRect();
+      // 检查是否有有效尺寸（DOMParser 解析的 DOM 返回全 0）
+      if (domRect.width > 0 || domRect.height > 0) {
+        rect = {
+          x: domRect.x,
+          y: domRect.y,
+          width: domRect.width,
+          height: domRect.height
+        };
+      }
+    }
+
+    // 如果没有有效尺寸，尝试从样式获取
+    if (rect.width === 0 && rect.height === 0) {
+      const style = window.getComputedStyle ?
+        window.getComputedStyle(element) : element.style;
+
+      rect = {
+        x: parseFloat(element.style.left) || parseFloat(style.left) || 0,
+        y: parseFloat(element.style.top) || parseFloat(style.top) || 0,
+        width: parseFloat(element.style.width) || parseFloat(style.width) || 0,
+        height: parseFloat(element.style.height) || parseFloat(style.height) || 0
+      };
+    }
+
+    // 对于文本元素，根据文本内容估算宽度
+    const text = this.getTextContent(element);
+    if (text && rect.width === 0) {
+      const style = window.getComputedStyle ?
+        window.getComputedStyle(element) : element.style;
+      const fontSize = parseFloat(style.fontSize) || 16;
+      // 粗略估算：每个字符约 0.6 * fontSize 宽度（考虑中英文混合）
+      const avgCharWidth = fontSize * 0.6;
+      rect.width = Math.min(text.length * avgCharWidth, 1600); // 最大宽度限制
+      rect.height = rect.height || fontSize * 1.5; // 行高约 1.5 倍
+    }
 
     const elementData = {
       type: this.getElementType(element),
       tagName,
-      text: this.getTextContent(element),
+      text: text,
       position: {
-        x: rect.x || parseFloat(element.style.left) || 0,
-        y: rect.y || parseFloat(element.style.top) || 0,
-        width: rect.width || parseFloat(element.style.width) || 0,
-        height: rect.height || parseFloat(element.style.height) || 0
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height
       },
       styles: this.extractComputedStyles(element),
       attributes: this.extractAttributes(element),

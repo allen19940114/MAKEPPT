@@ -287,3 +287,49 @@
 **Git 提交**: `308154a` - feat: 添加双排对比预览功能 + 修复文本换行
 
 **下一步**: 用户手动测试验证双排对比预览功能
+
+---
+
+### [2024-12-25 12:00] - Session 7
+
+**当前功能**: 修复 PPT 显示问题（文本宽度、位置、预览）
+
+**遇到的问题**:
+
+1. **PPT 预览只显示占位符**
+   - 原因: `renderPptPreview()` 只显示文字说明，没有真正渲染元素
+   - 解决: 重写 `renderPptPreview()`，递归渲染所有元素到画布
+
+2. **文本变成竖排（宽度太窄）**
+   - 原因: `HtmlParser.parseElement()` 使用 `getBoundingClientRect()`，
+     但在 DOMParser 解析的 DOM 中没有实际渲染，所有尺寸都是 0
+   - 解决:
+     - 检测 `getBoundingClientRect()` 返回是否有效（width/height > 0）
+     - 无效时根据文本内容和字号估算宽度
+     - 在 `PptGenerator.addTextElement()` 中增加宽度估算逻辑
+
+3. **图形溢出 PPT 边缘**
+   - 原因: 位置计算没有边界检查
+   - 解决: 在 `calculatePosition()` 中添加边界检查和修正逻辑
+
+**修改内容**:
+
+1. `src/core/HtmlParser.js`:
+   - `parseElement()`: 改进位置获取逻辑，添加文本宽度估算
+
+2. `src/core/PptGenerator.js`:
+   - `addTextElement()`: 添加文本宽度估算，考虑中英文字符宽度
+   - `calculatePosition()`: 添加边界检查，确保元素不超出幻灯片
+
+3. `src/index.js`:
+   - `renderPptPreview()`: 重写为真正渲染元素
+   - 添加 `renderElements()`: 递归渲染元素
+   - 添加 `renderElement()`: 渲染单个元素
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- 浏览器测试: ✅ 通过 (5/5)
+
+**Git 提交**: 待提交 - fix: 修复 PPT 显示问题（文本宽度、位置、预览）
+
+**下一步**: 用户手动测试验证 PPT 生成效果

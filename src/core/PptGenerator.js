@@ -226,12 +226,35 @@ export class PptGenerator {
     const textStyles = this.styleConverter.convertTextStyles(element.styles);
     const shapeStyles = this.styleConverter.convertShapeStyles(element.styles);
 
+    // 计算合适的文本宽度
+    let textWidth = position.w;
+    let textHeight = position.h;
+
+    // 如果宽度太小或为0，根据文本内容和字号估算
+    const fontSize = textStyles.fontSize || this.options.defaultFontSize;
+    if (textWidth <= 0.5) {
+      // 估算文本宽度：每个字符约 fontSize/72 英寸（对于中文可能更宽）
+      const avgCharWidthInches = fontSize / 72 * 0.55;
+      // 计算文本长度，考虑中文字符（占2个字符宽度）
+      let effectiveLength = 0;
+      for (const char of text) {
+        effectiveLength += char.charCodeAt(0) > 127 ? 1.5 : 1;
+      }
+      textWidth = Math.min(effectiveLength * avgCharWidthInches, this.options.slideWidth * 0.9);
+      textWidth = Math.max(textWidth, 1); // 最小宽度1英寸
+    }
+
+    // 确保高度合理
+    if (textHeight <= 0.2) {
+      textHeight = (fontSize / 72) * 1.5; // 行高约 1.5 倍字号
+    }
+
     // 构建文本配置 - 保留换行但禁用自动缩放
     const textOptions = {
       x: position.x,
       y: position.y,
-      w: position.w > 0 ? position.w : 2,
-      h: position.h > 0 ? position.h : 0.5,
+      w: textWidth,
+      h: textHeight,
       ...textStyles,
       ...shapeStyles,
       valign: 'top',
@@ -476,10 +499,46 @@ export class PptGenerator {
    */
   calculatePosition(position) {
     if (!position) {
-      return { x: 0.5, y: 0.5, w: 'auto', h: 'auto' };
+      return { x: 0.5, y: 0.5, w: 2, h: 0.5 };
     }
 
-    return this.styleConverter.calculatePosition(position, this.containerSize);
+    const result = this.styleConverter.calculatePosition(position, this.containerSize);
+
+    // 确保位置和尺寸不超出幻灯片边界
+    const slideW = this.options.slideWidth;
+    const slideH = this.options.slideHeight;
+
+    // 确保 x, y 不为负
+    result.x = Math.max(0, result.x);
+    result.y = Math.max(0, result.y);
+
+    // 确保元素不超出右边界
+    if (result.x + result.w > slideW) {
+      if (result.x >= slideW) {
+        // 元素完全在右边界外，移到左边
+        result.x = 0.5;
+      } else {
+        // 缩小宽度使其适应
+        result.w = Math.max(0.5, slideW - result.x - 0.1);
+      }
+    }
+
+    // 确保元素不超出下边界
+    if (result.y + result.h > slideH) {
+      if (result.y >= slideH) {
+        // 元素完全在下边界外，移到上边
+        result.y = 0.5;
+      } else {
+        // 缩小高度使其适应
+        result.h = Math.max(0.3, slideH - result.y - 0.1);
+      }
+    }
+
+    // 确保宽度和高度为正数
+    result.w = Math.max(0.5, result.w);
+    result.h = Math.max(0.3, result.h);
+
+    return result;
   }
 
   /**

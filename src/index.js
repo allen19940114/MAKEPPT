@@ -370,14 +370,24 @@ class App {
 
   // 渲染 PPT 模拟预览
   renderPptPreview(slideIndex) {
-    if (!this.pptPreviewCanvas || !this.previewData[slideIndex]) return;
+    if (!this.pptPreviewCanvas) return;
 
-    const slideData = this.previewData[slideIndex];
     this.pptPreviewCanvas.innerHTML = '';
 
+    // 获取解析的幻灯片数据（从 converter 获取实际元素）
+    const slides = this.converter.parseHtml(this.currentHtml);
+    const slideData = slides[slideIndex];
+
+    if (!slideData) {
+      this.pptPreviewCanvas.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">无法加载预览</div>';
+      return;
+    }
+
     // 设置背景
-    if (slideData.hasBackground && slideData.backgroundColor) {
-      this.pptPreviewCanvas.style.background = slideData.backgroundColor;
+    if (slideData.background?.color) {
+      this.pptPreviewCanvas.style.background = slideData.background.color;
+    } else if (slideData.background?.gradient) {
+      this.pptPreviewCanvas.style.background = `linear-gradient(${slideData.background.gradient.value})`;
     } else {
       this.pptPreviewCanvas.style.background = '#ffffff';
     }
@@ -387,44 +397,131 @@ class App {
     const canvasWidth = canvasRect.width || 400;
     const canvasHeight = canvasRect.height || 225;
 
-    // 假设原始 HTML 是 1920x1080
+    // 假设原始 HTML 是 1920x1080，计算缩放
     const scaleX = canvasWidth / 1920;
     const scaleY = canvasHeight / 1080;
     const scale = Math.min(scaleX, scaleY);
 
-    // 创建预览提示
+    // 渲染元素
+    this.renderElements(slideData.elements, scale, canvasWidth, canvasHeight);
+
+    // 创建预览提示（在底部）
     const infoDiv = document.createElement('div');
     infoDiv.style.cssText = `
       position: absolute;
-      bottom: 10px;
-      right: 10px;
-      background: rgba(0,0,0,0.6);
+      bottom: 5px;
+      right: 5px;
+      background: rgba(0,0,0,0.5);
       color: white;
-      padding: 5px 10px;
-      border-radius: 4px;
-      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 10px;
+      z-index: 100;
     `;
-    infoDiv.textContent = `幻灯片 ${slideIndex + 1}: ${slideData.title || 'Untitled'} (${slideData.elementCount} 元素)`;
+    infoDiv.textContent = `${slideIndex + 1}/${slides.length} - ${slideData.elements.length} 元素`;
     this.pptPreviewCanvas.appendChild(infoDiv);
+  }
 
-    // 添加说明文字
-    const noteDiv = document.createElement('div');
-    noteDiv.style.cssText = `
+  // 渲染幻灯片元素到 PPT 预览区
+  renderElements(elements, scale, canvasWidth, canvasHeight) {
+    const offsetX = (canvasWidth - 1920 * scale) / 2;
+    const offsetY = (canvasHeight - 1080 * scale) / 2;
+
+    for (const element of elements) {
+      this.renderElement(element, scale, offsetX, offsetY);
+
+      // 递归渲染子元素
+      if (element.children && element.children.length > 0) {
+        this.renderElements(element.children, scale, canvasWidth, canvasHeight);
+      }
+    }
+  }
+
+  // 渲染单个元素
+  renderElement(element, scale, offsetX, offsetY) {
+    const div = document.createElement('div');
+    div.className = 'ppt-element';
+
+    // 计算位置
+    const x = element.position.x * scale + offsetX;
+    const y = element.position.y * scale + offsetY;
+    const w = element.position.width * scale;
+    const h = element.position.height * scale;
+
+    // 基础样式
+    div.style.cssText = `
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      color: #666;
-      font-size: 14px;
+      left: ${x}px;
+      top: ${y}px;
+      width: ${w > 0 ? w + 'px' : 'auto'};
+      height: ${h > 0 ? h + 'px' : 'auto'};
+      overflow: hidden;
+      box-sizing: border-box;
     `;
-    noteDiv.innerHTML = `
-      <div style="font-size: 48px; margin-bottom: 10px;">📊</div>
-      <div style="font-weight: bold;">${this.escapeHtml(slideData.title || 'Untitled')}</div>
-      <div style="margin-top: 8px; color: #999;">${slideData.elementCount} 个元素</div>
-      <div style="margin-top: 8px; font-size: 12px; color: #aaa;">PPT 预览模拟</div>
-    `;
-    this.pptPreviewCanvas.appendChild(noteDiv);
+
+    // 根据元素类型渲染
+    switch (element.type) {
+      case 'heading':
+      case 'paragraph':
+      case 'text':
+        if (element.text) {
+          div.classList.add('ppt-element-text');
+          div.textContent = element.text;
+
+          // 应用文本样式
+          if (element.styles) {
+            div.style.fontFamily = element.styles.fontFamily || 'Arial';
+            div.style.fontSize = element.styles.fontSize ?
+              (parseFloat(element.styles.fontSize) * scale) + 'px' : (14 * scale) + 'px';
+            div.style.fontWeight = element.styles.fontWeight || 'normal';
+            div.style.color = element.styles.color || '#000';
+            div.style.textAlign = element.styles.textAlign || 'left';
+          }
+
+          // 标题样式
+          if (element.type === 'heading') {
+            div.style.fontWeight = 'bold';
+            const level = parseInt(element.tagName?.replace('h', '') || '1');
+            const sizes = { 1: 32, 2: 28, 3: 24, 4: 20, 5: 18, 6: 16 };
+            div.style.fontSize = (sizes[level] || 24) * scale + 'px';
+          }
+        }
+        break;
+
+      case 'image':
+        if (element.src && !element.src.startsWith('blob:')) {
+          const img = document.createElement('img');
+          img.src = element.src;
+          img.style.cssText = 'max-width: 100%; max-height: 100%; object-fit: contain;';
+          img.onerror = () => { div.innerHTML = '<span style="color:#999;font-size:10px;">图片</span>'; };
+          div.appendChild(img);
+        } else {
+          div.innerHTML = '<span style="color:#999;font-size:10px;">[图片]</span>';
+        }
+        break;
+
+      case 'container':
+        // 容器可能有背景色
+        if (element.styles?.backgroundColor) {
+          div.style.backgroundColor = element.styles.backgroundColor;
+        }
+        if (element.styles?.borderRadius) {
+          div.style.borderRadius = element.styles.borderRadius;
+        }
+        break;
+
+      default:
+        // 其他类型如果有文本也显示
+        if (element.text) {
+          div.textContent = element.text;
+          div.style.fontSize = (12 * scale) + 'px';
+        }
+    }
+
+    // 只有当元素有实际内容或有尺寸时才添加
+    if (div.textContent || div.children.length > 0 || (w > 5 && h > 5 && element.styles?.backgroundColor)) {
+      this.pptPreviewCanvas.appendChild(div);
+    }
   }
 
   // 导航到上一张/下一张幻灯片
