@@ -444,11 +444,21 @@ export class PptGenerator {
       svg = svg.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
     }
 
-    // 如果提供了颜色，尝试应用到 SVG
-    if (color && color !== 'transparent') {
-      // 添加 fill 属性（如果没有的话）
-      if (!svg.includes('fill=')) {
-        svg = svg.replace('<svg', `<svg fill="${color}"`);
+    // 如果提供了颜色，强制应用到 SVG 和所有子元素
+    if (color && color !== 'transparent' && color !== null) {
+      // 移除现有的 fill 属性（在 svg 标签上）
+      svg = svg.replace(/<svg([^>]*)\s+fill="[^"]*"/, '<svg$1');
+      // 在 svg 标签上添加新的 fill 属性
+      svg = svg.replace('<svg', `<svg fill="${color}"`);
+
+      // 同时替换所有 path, circle, rect, polygon 上的 fill 属性
+      svg = svg.replace(/(<(?:path|circle|rect|polygon)[^>]*)\s+fill="[^"]*"/g, '$1');
+
+      // 添加内联样式确保颜色生效
+      if (svg.includes('<style>')) {
+        svg = svg.replace('</style>', `path, circle, rect, polygon { fill: ${color} !important; }</style>`);
+      } else {
+        svg = svg.replace('</svg>', `<style>path, circle, rect, polygon { fill: ${color} !important; }</style></svg>`);
       }
     }
 

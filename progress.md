@@ -480,4 +480,50 @@
 - 代码测试: ✅ 通过 (49/49)
 - 浏览器测试: ✅ 通过 (5/5)
 
+**Git 提交**: `pending` - feat: SVG 图标转换为图片嵌入 PPT
+
+---
+
+### [2024-12-25 17:00] - Session 11
+
+**当前功能**: 修复 SVG 图标颜色问题
+
+**遇到的问题**:
+
+1. **SVG 图标颜色错误（黑色而非白色）**
+   - 原因: HTML 中 SVG 的填充色通过 CSS `fill: white` 设置，
+     但 `getSvgColor()` 方法未实现，无法提取 CSS 样式中的颜色
+   - 视觉测试发现: 生成的 PPT 中 SVG 图标显示为黑色，而非预期的白色
+
+**解决方案**:
+
+1. **HtmlParser 添加 getSvgColor() 方法**:
+   - 检查 SVG 元素的 `fill` 属性
+   - 检查 SVG 内部 path/circle/rect/polygon 元素的 `fill` 属性
+   - 检查计算样式的 `fill` 属性
+   - 检查 CSS 的 `color` 属性（用于 currentColor）
+   - 向上遍历父元素查找 `color` 属性
+
+2. **PptGenerator 改进 svgToBase64() 方法**:
+   - 强制覆盖 SVG 标签上的现有 `fill` 属性
+   - 移除所有子元素（path, circle 等）的 `fill` 属性
+   - 添加内联 `<style>` 使用 `!important` 确保颜色生效
+
+**修改内容**:
+
+1. `src/core/HtmlParser.js`:
+   - 添加 `getSvgColor()`: 多层级提取 SVG 填充颜色
+
+2. `src/core/PptGenerator.js`:
+   - 改进 `svgToBase64()`: 强制应用颜色到所有 SVG 子元素
+
+**视觉测试验证**:
+- 创建 `test-ppt-visual.js` 脚本进行自动化视觉测试
+- 生成 PPT 并解压验证 SVG 文件内容
+- 确认 SVG 文件包含 `fill="#ffffff"` 白色填充
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- 视觉测试: ✅ SVG 颜色正确为 #ffffff
+
 **下一步**: Git 提交并推送

@@ -246,6 +246,8 @@ export class HtmlParser {
       // 提取 SVG 内容用于转换为图片
       elementData.svgContent = element.outerHTML;
       elementData.type = 'svg';
+      // 获取 SVG 的填充颜色（从 CSS 或属性）
+      elementData.iconColor = this.getSvgColor(element);
     }
 
     // 如果是图标元素，尝试提取 SVG 或图标信息
@@ -253,9 +255,12 @@ export class HtmlParser {
       const svgChild = element.querySelector('svg');
       if (svgChild) {
         elementData.svgContent = svgChild.outerHTML;
+        // 获取 SVG 的填充颜色
+        elementData.iconColor = this.getSvgColor(svgChild) || this.extractComputedStyles(element).color;
+      } else {
+        // 获取图标的颜色（用于后续渲染）
+        elementData.iconColor = this.extractComputedStyles(element).color;
       }
-      // 获取图标的颜色（用于后续渲染）
-      elementData.iconColor = this.extractComputedStyles(element).color;
     }
 
     // 递归处理子元素
@@ -468,6 +473,61 @@ export class HtmlParser {
     });
 
     return { isOrdered, items };
+  }
+
+  /**
+   * 获取 SVG 元素的填充颜色
+   * @param {SVGElement} svgElement - SVG 元素
+   * @returns {string|null} 颜色值
+   */
+  getSvgColor(svgElement) {
+    // 1. 检查 SVG 元素的 fill 属性
+    const fillAttr = svgElement.getAttribute('fill');
+    if (fillAttr && fillAttr !== 'none' && fillAttr !== 'currentColor') {
+      return this.normalizeColor(fillAttr);
+    }
+
+    // 2. 检查 SVG 内部 path 元素的 fill 属性
+    const paths = svgElement.querySelectorAll('path, circle, rect, polygon');
+    for (const path of paths) {
+      const pathFill = path.getAttribute('fill');
+      if (pathFill && pathFill !== 'none' && pathFill !== 'currentColor') {
+        return this.normalizeColor(pathFill);
+      }
+    }
+
+    // 3. 检查计算样式的 fill
+    if (window.getComputedStyle) {
+      const style = window.getComputedStyle(svgElement);
+      const cssFill = style.fill;
+      if (cssFill && cssFill !== 'none' && !cssFill.includes('rgb(0, 0, 0)')) {
+        return this.normalizeColor(cssFill);
+      }
+    }
+
+    // 4. 检查 CSS 的 color 属性（SVG 的 currentColor 会继承）
+    if (window.getComputedStyle) {
+      const style = window.getComputedStyle(svgElement);
+      const cssColor = style.color;
+      if (cssColor && cssColor !== 'rgb(0, 0, 0)') {
+        return this.normalizeColor(cssColor);
+      }
+    }
+
+    // 5. 检查父元素的 color
+    let parent = svgElement.parentElement;
+    while (parent) {
+      if (window.getComputedStyle) {
+        const parentStyle = window.getComputedStyle(parent);
+        const parentColor = parentStyle.color;
+        if (parentColor && parentColor !== 'rgb(0, 0, 0)') {
+          return this.normalizeColor(parentColor);
+        }
+      }
+      parent = parent.parentElement;
+    }
+
+    return null;
   }
 
   /**
