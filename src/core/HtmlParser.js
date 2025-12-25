@@ -261,6 +261,10 @@ export class HtmlParser {
         // 获取图标的颜色（用于后续渲染）
         elementData.iconColor = this.extractComputedStyles(element).color;
       }
+      // 清空图标元素的文本内容，防止字体图标文本（如 "car", "home"）被当作普通文本输出
+      // Material Icons 等字体图标使用文本内容来显示图标，这些文本不应该出现在 PPT 中
+      elementData.text = '';
+      elementData.isFontIcon = !svgChild; // 标记是否为字体图标
     }
 
     // 递归处理子元素
@@ -320,8 +324,13 @@ export class HtmlParser {
 
     // 检测常见的图标类名
     const iconClassPatterns = [
-      'icon', 'fa', 'fas', 'far', 'fab', 'material-icons',
-      'glyphicon', 'bi', 'feather', 'lucide', 'heroicon'
+      'icon', 'fa', 'fas', 'far', 'fab', 'fal', 'fad',  // Font Awesome
+      'material-icons', 'material-icons-outlined', 'material-icons-round', 'material-icons-sharp', 'material-symbols',  // Material Icons
+      'glyphicon', 'bi', 'bi-',  // Bootstrap Icons
+      'feather', 'lucide', 'heroicon',  // 其他图标库
+      'mdi', 'mdi-',  // Material Design Icons
+      'ion', 'ionicon',  // Ionicons
+      'ri-', 'remixicon'  // Remix Icons
     ];
 
     for (const pattern of iconClassPatterns) {
@@ -330,10 +339,17 @@ export class HtmlParser {
       }
     }
 
-    // <i> 标签通常用于图标
-    if (tagName === 'i' && element.textContent.trim().length <= 2) {
-      return true;
+    // <i> 标签通常用于图标（允许更长的文本，因为 Material Icons 使用单词如 "car", "home"）
+    if (tagName === 'i') {
+      const text = element.textContent.trim();
+      // Material Icons 使用单词（如 "home", "car", "settings"）
+      // 检测是否是短单词（通常图标名不超过 30 个字符）
+      if (text.length <= 30 && /^[a-z_]+$/i.test(text)) {
+        return true;
+      }
     }
+
+    // <span> 标签带有 material-icons 类名已在上面处理
 
     // SVG 图标
     if (tagName === 'svg') {

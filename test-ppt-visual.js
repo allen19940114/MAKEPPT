@@ -10,6 +10,7 @@ const TEST_HTML = `
 <!DOCTYPE html>
 <html>
 <head>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <style>
     body { margin: 0; font-family: Arial, sans-serif; }
     .slide { width: 1920px; height: 1080px; padding: 60px; box-sizing: border-box; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
@@ -19,30 +20,31 @@ const TEST_HTML = `
     .icon-item { display: flex; align-items: center; gap: 15px; background: rgba(255,255,255,0.2); padding: 20px 30px; border-radius: 15px; }
     .icon-item svg { width: 48px; height: 48px; fill: white; }
     .icon-item span { color: white; font-size: 24px; }
+    .material-icons { font-size: 48px; color: white; }
   </style>
 </head>
 <body>
   <section class="slide">
     <h1>HTML to PPT 转换测试</h1>
-    <p>这是一个包含 SVG 图标的测试幻灯片，用于验证图标是否正确转换为 PPT。</p>
+    <p>这是一个包含图标的测试幻灯片，用于验证图标是否正确转换为 PPT。</p>
     <div class="icon-box">
       <div class="icon-item">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
         </svg>
-        <span>任务完成</span>
+        <span>SVG图标</span>
       </div>
       <div class="icon-item">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-        </svg>
-        <span>收藏功能</span>
+        <span class="material-icons">directions_car</span>
+        <span>车辆图标</span>
       </div>
       <div class="icon-item">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/>
-        </svg>
-        <span>云存储</span>
+        <span class="material-icons">home</span>
+        <span>首页图标</span>
+      </div>
+      <div class="icon-item">
+        <i class="material-icons">settings</i>
+        <span>设置图标</span>
       </div>
     </div>
   </section>

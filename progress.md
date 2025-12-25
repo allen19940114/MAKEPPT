@@ -573,4 +573,50 @@
 - 代码测试: ✅ 通过 (49/49)
 - 浏览器测试: ✅ 通过 (5/5)
 
+**Git 提交**: `1cad04e` - fix: 修复 PPT 比例失真问题
+
+---
+
+### [2024-12-25 19:00] - Session 13
+
+**当前功能**: 修复字体图标文本显示问题
+
+**遇到的问题**:
+
+1. **Material Icons 等字体图标文本出现在 PPT 中**
+   - 现象: 下载的 PPT 中图标变成了文字，如车图标变成了 "car"、"directions_car"
+   - 原因: Material Icons 使用文本内容（如 "car", "home", "settings"）来显示图标
+   - 之前的 `isIconText()` 只检测 Unicode Private Use Area，无法检测普通 ASCII 文本
+
+**解决方案**:
+
+1. **HtmlParser 改进图标检测**:
+   - 扩展 `isIconElement()` 支持更多图标库类名:
+     - Font Awesome: fa, fas, far, fab, fal, fad
+     - Material Icons: material-icons, material-symbols 等变体
+     - Bootstrap Icons: bi, bi-
+     - 其他: mdi, ionicon, remixicon 等
+   - 改进 `<i>` 标签检测: 允许更长的文本（30字符内的小写单词）
+
+2. **HtmlParser 清空图标文本**:
+   - 在 `parseElement()` 中，对 `type === 'icon'` 的元素，设置 `elementData.text = ''`
+   - 添加 `isFontIcon` 标记区分字体图标和 SVG 图标
+
+**修改内容**:
+
+1. `src/core/HtmlParser.js`:
+   - `isIconElement()`: 扩展图标类名检测，改进 `<i>` 标签判断
+   - `parseElement()`: 清空图标元素的 text 属性
+
+2. `test-ppt-visual.js`:
+   - 添加 Material Icons 测试用例（directions_car, home, settings）
+
+**验证结果**:
+- PPT 文本内容中不包含 "directions_car"、"home"、"settings" 等字体图标文本
+- 正常中文文本（如 "车辆图标"、"首页图标"）正确保留
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- 浏览器测试: ✅ 通过 (5/5)
+
 **下一步**: Git 提交并推送
