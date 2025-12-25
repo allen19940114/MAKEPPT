@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SNTP SAP Transformation 2026</title>
+<style>
+  body { margin: 0; padding: 20px; background: #333; font-family: Arial, sans-serif; }
+  .slide {
+    position: relative;
+    width: 1280px;
+    height: 720px;
+    background-color: #ffffff;
+    overflow: hidden;
+    margin: 20px auto;
+  }
+</style>
+</head>
+<body>
+
+<!-- Slide 1: Title Page -->
+<section class="slide" style="background-color: #003366;">
+  <div style="position: absolute; left: 100px; top: 240px; width: 80px; height: 8px; background-color: #FF6600;"></div>
+  <h1 style="position: absolute; left: 100px; top: 280px; width: 1080px; height: 80px; font-size: 64px; font-weight: bold; color: #ffffff;">SNTP Digital Transformation</h1>
+  <p style="position: absolute; left: 100px; top: 380px; width: 1080px; height: 50px; font-size: 42px; font-weight: 300; color: #cccccc;">SAP S/4HANA Strategic Roadmap 2026</p>
+  <p style="position: absolute; left: 100px; top: 520px; width: 600px; height: 24px; font-size: 16px; color: #8899aa; letter-spacing: 2px;">PRESENTED TO</p>
+  <p style="position: absolute; left: 100px; top: 550px; width: 600px; height: 36px; font-size: 26px; color: #ffffff; font-weight: 500;">SNTP Steering Committee</p>
+  <div style="position: absolute; left: 1000px; top: 640px; width: 180px; height: 36px; border: 2px solid #FF6600; border-radius: 4px;"></div>
+  <p style="position: absolute; left: 1020px; top: 648px; width: 140px; height: 20px; font-size: 12px; font-weight: bold; color: #FF6600; text-align: center;">CONFIDENTIAL</p>
+</section>
+
+<!-- Slide 2: Context & Stats -->
+<section class="slide" style="background-color: #ffffff;">
+  <h2 style="position: absolute; left: 80px; top: 50px; width: 800px; height: 50px; font-size: 40px; font-weight: bold; color: #003366;">Strategic Context: Infrastructure Leader</h2>
+  <div style="position: absolute; left: 80px; top: 110px; width: 1120px; height: 3px; background-color: #e0e0e0;"></div>
+
+  <!-- Stats Cards -->
+  <div style="position: absolute; left: 80px; top: 150px; width: 250px; height: 120px; background-color: #f5f5f5; border-left: 6px solid #003366;"></div>
+  <p style="position: absolute; left: 100px; top: 170px; width: 210px; height: 50px; font-size: 44px; font-weight: bold; color: #003366;">45B+</p>
+  <p style="position: absolute; left: 100px; top: 230px; width: 210px; height: 24px; font-size: 14px; color: #666666;">Annual Turnover (DZD)</p>
+
+  <div style="position: absolute; left: 360px; top: 150px; width: 250px; height: 120px; background-color: #fff5ee; border-left: 6px solid #FF6600;"></div>
+  <p style="position: absolute; left: 380px; top: 170px; width: 210px; height: 50px; font-size: 44px; font-weight: bold; color: #FF6600;">42</p>
+  <p style="position: absolute; left: 380px; top: 230px; width: 210px; height: 24px; font-size: 14px; color: #666666;">Active Construction Sites</p>
+
+  <div style="position: absolute; left: 640px; top: 150px; width: 250px; height: 120px; background-color: #f0fff4; border-left: 6px solid #10b981;"></div>
+  <p style="position: absolute; left: 660px; top: 170px; width: 210px; height: 50px; font-size: 44px; font-weight: bold; color: #10b981;">850+</p>
+  <p style="position: absolute; left: 660px; top: 230px; width: 210px; height: 24px; font-size: 14px; color: #666666;">Heavy Machinery Units</p>
+
+  <div style="position: absolute; left: 920px; top: 150px; width: 250px; height: 120px; background-color: #faf5ff; border-left: 6px solid #8b5cf6;"></div>
+  <p style="position: absolute; left: 940px; top: 170px; width: 210px; height: 50px; font-size: 44px; font-weight: bold; color: #8b5cf6;">3,200</p>
+  <p style="position: absolute; left: 940px; top: 230px; width: 210px; height: 24px; font-size: 14px; color: #666666;">Skilled Employees</p>
+
+  <!-- Strategy Cards -->
+  <p style="position: absolute; left: 80px; top: 310px; width: 400px; height: 30px; font-size: 20px; font-weight: bold; color: #334155;">Strategic Objectives 2030</p>
+
+  <div style="position: absolute; left: 80px; top: 360px; width: 350px; height: 180px; background-color: #003366; border-radius: 8px;"></div>
+  <p style="position: absolute; left: 110px; top: 390px; width: 290px; height: 30px; font-size: 20px; font-weight: bold; color: #ffffff;">Operational Excellence</p>
+  <p style="position: absolute; left: 110px; top: 430px; width: 290px; height: 80px; font-size: 15px; color: #bbccdd; line-height: 1.5;">Unify data across 4 regional offices to reduce closing time by 50%.</p>
+
+  <div style="position: absolute; left: 460px; top: 360px; width: 350px; height: 180px; background-color: #FF6600; border-radius: 8px;"></div>
+  <p style="position: absolute; left: 490px; top: 390px; width: 290px; height: 30px; font-size: 20px; font-weight: bold; color: #ffffff;">Asset Optimization</p>
+  <p style="position: absolute; left: 490px; top: 430px; width: 290px; height: 80px; font-size: 15px; color: #ffddcc; line-height: 1.5;">Maximize ROI on heavy machinery through predictive maintenance tracking.</p>
+
+  <div style="position: absolute; left: 840px; top: 360px; width: 350px; height: 180px; background-color: #10b981; border-radius: 8px;"></div>
+  <p style="position: absolute; left: 870px; top: 390px; width: 290px; height: 30px; font-size: 20px; font-weight: bold; color: #ffffff;">Cost Control</p>
+  <p style="position: absolute; left: 870px; top: 430px; width: 290px; height: 80px; font-size: 15px; color: #ccffee; line-height: 1.5;">Real-time budget availability checks to prevent overspending at the source.</p>
+</section>
+
+<!-- Slide 3: Pain Points -->
+<section class="slide" style="background-color: #f5f5f5;">
+  <h2 style="position: absolute; left: 80px; top: 50px; width: 600px; height: 50px; font-size: 40px; font-weight: bold; color: #003366;">Critical Challenges</h2>
+  <div style="position: absolute; left: 80px; top: 110px; width: 1120px; height: 3px; background-color: #cccccc;"></div>
+
+  <!-- Challenge 1 -->
+  <div style="position: absolute; left: 140px; top: 180px; width: 1000px; height: 120px; background-color: #ffffff; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 140px; top: 180px; width: 8px; height: 120px; background-color: #ef4444; border-radius: 8px 0 0 8px;"></div>
+  <p style="position: absolute; left: 180px; top: 205px; width: 700px; height: 30px; font-size: 22px; font-weight: bold; color: #1e293b;">Data Silos & Fragmentation</p>
+  <p style="position: absolute; left: 180px; top: 245px; width: 800px; height: 40px; font-size: 15px; color: #666666;">Regional offices use disparate Excel sheets, causing 20+ day delays in monthly financial closing.</p>
+  <div style="position: absolute; left: 1060px; top: 215px; width: 50px; height: 50px; background-color: #ef4444; border-radius: 25px;"></div>
+  <p style="position: absolute; left: 1060px; top: 228px; width: 50px; height: 24px; font-size: 20px; font-weight: bold; color: #ffffff; text-align: center;">!</p>
+
+  <!-- Challenge 2 -->
+  <div style="position: absolute; left: 140px; top: 320px; width: 1000px; height: 120px; background-color: #ffffff; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 140px; top: 320px; width: 8px; height: 120px; background-color: #f59e0b; border-radius: 8px 0 0 8px;"></div>
+  <p style="position: absolute; left: 180px; top: 345px; width: 700px; height: 30px; font-size: 22px; font-weight: bold; color: #1e293b;">Budget Blindspots</p>
+  <p style="position: absolute; left: 180px; top: 385px; width: 800px; height: 40px; font-size: 15px; color: #666666;">Lack of real-time control (Availability Control). Cost overruns are identified only after invoice processing.</p>
+  <div style="position: absolute; left: 1060px; top: 355px; width: 50px; height: 50px; background-color: #f59e0b; border-radius: 25px;"></div>
+  <p style="position: absolute; left: 1060px; top: 368px; width: 50px; height: 24px; font-size: 20px; font-weight: bold; color: #ffffff; text-align: center;">$</p>
+
+  <!-- Challenge 3 -->
+  <div style="position: absolute; left: 140px; top: 460px; width: 1000px; height: 120px; background-color: #ffffff; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 140px; top: 460px; width: 8px; height: 120px; background-color: #6366f1; border-radius: 8px 0 0 8px;"></div>
+  <p style="position: absolute; left: 180px; top: 485px; width: 700px; height: 30px; font-size: 22px; font-weight: bold; color: #1e293b;">Supply Chain Inefficiency</p>
+  <p style="position: absolute; left: 180px; top: 525px; width: 800px; height: 40px; font-size: 15px; color: #666666;">Dead stock in remote sites while other sites purchase at retail premiums.</p>
+  <div style="position: absolute; left: 1060px; top: 495px; width: 50px; height: 50px; background-color: #6366f1; border-radius: 25px;"></div>
+  <p style="position: absolute; left: 1060px; top: 508px; width: 50px; height: 24px; font-size: 20px; font-weight: bold; color: #ffffff; text-align: center;">X</p>
+</section>
+
+<!-- Slide 4: Architecture -->
+<section class="slide" style="background-color: #ffffff;">
+  <h2 style="position: absolute; left: 80px; top: 40px; width: 800px; height: 50px; font-size: 38px; font-weight: bold; color: #0f172a;">SAP Intelligent Enterprise Architecture</h2>
+  <div style="position: absolute; left: 80px; top: 100px; width: 1120px; height: 2px; background-color: #e0e0e0;"></div>
+
+  <!-- Top Layer -->
+  <div style="position: absolute; left: 140px; top: 140px; width: 1000px; height: 80px; background-color: #1e293b; border-radius: 12px 12px 0 0;"></div>
+  <p style="position: absolute; left: 140px; top: 150px; width: 1000px; height: 20px; font-size: 11px; font-weight: bold; color: #94a3b8; text-align: center; letter-spacing: 2px;">INDUSTRY CLOUD & EXTENSIONS</p>
+  <p style="position: absolute; left: 200px; top: 180px; width: 180px; height: 24px; font-size: 13px; color: #ffffff; text-align: center; background-color: #334155; border-radius: 4px; line-height: 24px;">Engineering Control</p>
+  <p style="position: absolute; left: 420px; top: 180px; width: 180px; height: 24px; font-size: 13px; color: #ffffff; text-align: center; background-color: #334155; border-radius: 4px; line-height: 24px;">Ariba Procurement</p>
+  <p style="position: absolute; left: 640px; top: 180px; width: 180px; height: 24px; font-size: 13px; color: #ffffff; text-align: center; background-color: #334155; border-radius: 4px; line-height: 24px;">SuccessFactors HR</p>
+  <p style="position: absolute; left: 860px; top: 180px; width: 180px; height: 24px; font-size: 13px; color: #ffffff; text-align: center; background-color: #334155; border-radius: 4px; line-height: 24px;">Analytics Cloud</p>
+
+  <!-- Core Box -->
+  <div style="position: absolute; left: 140px; top: 230px; width: 1000px; height: 300px; background-color: #ffffff; border: 4px solid #2563eb; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 390px; top: 230px; width: 300px; height: 28px; background-color: #2563eb; border-radius: 0 0 8px 8px;"></div>
+  <p style="position: absolute; left: 390px; top: 232px; width: 300px; height: 24px; font-size: 11px; font-weight: bold; color: #ffffff; text-align: center;">THE DIGITAL CORE: S/4HANA</p>
+
+  <!-- Module Cards -->
+  <div style="position: absolute; left: 180px; top: 290px; width: 180px; height: 180px; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px;"></div>
+  <p style="position: absolute; left: 180px; top: 330px; width: 180px; height: 40px; font-size: 32px; font-weight: bold; color: #2563eb; text-align: center;">FI</p>
+  <p style="position: absolute; left: 180px; top: 380px; width: 180px; height: 24px; font-size: 16px; font-weight: bold; color: #1e40af; text-align: center;">Finance</p>
+  <p style="position: absolute; left: 180px; top: 410px; width: 180px; height: 20px; font-size: 12px; color: #60a5fa; text-align: center;">FI / CO</p>
+
+  <div style="position: absolute; left: 390px; top: 290px; width: 180px; height: 180px; background-color: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px;"></div>
+  <p style="position: absolute; left: 390px; top: 330px; width: 180px; height: 40px; font-size: 32px; font-weight: bold; color: #ea580c; text-align: center;">MM</p>
+  <p style="position: absolute; left: 390px; top: 380px; width: 180px; height: 24px; font-size: 16px; font-weight: bold; color: #9a3412; text-align: center;">Supply Chain</p>
+  <p style="position: absolute; left: 390px; top: 410px; width: 180px; height: 20px; font-size: 12px; color: #fb923c; text-align: center;">MM / SD</p>
+
+  <div style="position: absolute; left: 600px; top: 290px; width: 180px; height: 180px; background-color: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px;"></div>
+  <p style="position: absolute; left: 600px; top: 330px; width: 180px; height: 40px; font-size: 32px; font-weight: bold; color: #9333ea; text-align: center;">PM</p>
+  <p style="position: absolute; left: 600px; top: 380px; width: 180px; height: 24px; font-size: 16px; font-weight: bold; color: #6b21a8; text-align: center;">Asset Mgmt</p>
+  <p style="position: absolute; left: 600px; top: 410px; width: 180px; height: 20px; font-size: 12px; color: #a855f7; text-align: center;">PM / EAM</p>
+
+  <div style="position: absolute; left: 810px; top: 290px; width: 180px; height: 180px; background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px;"></div>
+  <p style="position: absolute; left: 810px; top: 330px; width: 180px; height: 40px; font-size: 32px; font-weight: bold; color: #059669; text-align: center;">PS</p>
+  <p style="position: absolute; left: 810px; top: 380px; width: 180px; height: 24px; font-size: 16px; font-weight: bold; color: #065f46; text-align: center;">Projects</p>
+  <p style="position: absolute; left: 810px; top: 410px; width: 180px; height: 20px; font-size: 12px; color: #34d399; text-align: center;">PS / PPM</p>
+
+  <!-- Bottom Layer -->
+  <div style="position: absolute; left: 140px; top: 545px; width: 1000px; height: 60px; background-color: #334155; border-radius: 0 0 12px 12px;"></div>
+  <p style="position: absolute; left: 180px; top: 562px; width: 400px; height: 24px; font-size: 13px; font-weight: bold; color: #ffffff;">BUSINESS TECHNOLOGY PLATFORM (BTP)</p>
+  <p style="position: absolute; left: 700px; top: 562px; width: 400px; height: 24px; font-size: 12px; color: #94a3b8; text-align: right;">HANA Database | Analytics | Integration Suite</p>
+</section>
+
+<!-- Slide 5: Solution Roadmap -->
+<section class="slide" style="background-color: #ffffff;">
+  <h2 style="position: absolute; left: 80px; top: 40px; width: 800px; height: 50px; font-size: 38px; font-weight: bold; color: #003366;">Solution Roadmap: RISE with SAP</h2>
+  <div style="position: absolute; left: 80px; top: 100px; width: 1120px; height: 2px; background-color: #e0e0e0;"></div>
+
+  <!-- Left Panel -->
+  <div style="position: absolute; left: 80px; top: 140px; width: 380px; height: 450px; background-color: #eff6ff; border: 2px solid #2563eb; border-radius: 12px;"></div>
+  <p style="position: absolute; left: 110px; top: 170px; width: 320px; height: 36px; font-size: 26px; font-weight: bold; color: #1e40af;">Private Cloud Edition</p>
+  <p style="position: absolute; left: 110px; top: 220px; width: 320px; height: 100px; font-size: 15px; color: #1e3a8a; line-height: 1.6;">We recommend S/4HANA Cloud, Private Edition to ensure data sovereignty within Algeria while leveraging cloud management standards.</p>
+
+  <div style="position: absolute; left: 110px; top: 340px; width: 320px; height: 40px; background-color: #ffffff; border-radius: 6px;"></div>
+  <p style="position: absolute; left: 130px; top: 350px; width: 280px; height: 20px; font-size: 14px; font-weight: bold; color: #333333;">✓ Single SLA Contract</p>
+
+  <div style="position: absolute; left: 110px; top: 390px; width: 320px; height: 40px; background-color: #ffffff; border-radius: 6px;"></div>
+  <p style="position: absolute; left: 130px; top: 400px; width: 280px; height: 20px; font-size: 14px; font-weight: bold; color: #333333;">✓ Technical Managed Services</p>
+
+  <div style="position: absolute; left: 110px; top: 440px; width: 320px; height: 40px; background-color: #ffffff; border-radius: 6px;"></div>
+  <p style="position: absolute; left: 130px; top: 450px; width: 280px; height: 20px; font-size: 14px; font-weight: bold; color: #333333;">✓ Annual Upgrades</p>
+
+  <div style="position: absolute; left: 110px; top: 490px; width: 320px; height: 40px; background-color: #ffffff; border-radius: 6px;"></div>
+  <p style="position: absolute; left: 130px; top: 500px; width: 280px; height: 20px; font-size: 14px; font-weight: bold; color: #333333;">✓ Embedded Fiori UX</p>
+
+  <!-- Right Module Cards -->
+  <div style="position: absolute; left: 500px; top: 140px; width: 310px; height: 200px; background-color: #ffffff; border: 1px solid #dddddd; border-radius: 8px;"></div>
+  <p style="position: absolute; left: 520px; top: 160px; width: 270px; height: 28px; font-size: 20px; font-weight: bold; color: #003366;">Project Systems (PS)</p>
+  <p style="position: absolute; left: 520px; top: 200px; width: 270px; height: 100px; font-size: 14px; color: #666666; line-height: 1.6;">The Core. WBS structures, Cost Planning, Budgeting, and Progress Analysis.</p>
+
+  <div style="position: absolute; left: 840px; top: 140px; width: 310px; height: 200px; background-color: #ffffff; border: 1px solid #dddddd; border-radius: 8px;"></div>
+  <p style="position: absolute; left: 860px; top: 160px; width: 270px; height: 28px; font-size: 20px; font-weight: bold; color: #ea580c;">Supply Chain (MM)</p>
+  <p style="position: absolute; left: 860px; top: 200px; width: 270px; height: 100px; font-size: 14px; color: #666666; line-height: 1.6;">Procurement and Inventory across 42 sites. Service Entry Sheets for subcontractors.</p>
+
+  <div style="position: absolute; left: 500px; top: 360px; width: 310px; height: 200px; background-color: #ffffff; border: 1px solid #dddddd; border-radius: 8px;"></div>
+  <p style="position: absolute; left: 520px; top: 380px; width: 270px; height: 28px; font-size: 20px; font-weight: bold; color: #7c3aed;">Plant Maintenance (PM)</p>
+  <p style="position: absolute; left: 520px; top: 420px; width: 270px; height: 100px; font-size: 14px; color: #666666; line-height: 1.6;">Lifecycle management for 850+ machines. Preventive maintenance plans.</p>
+
+  <div style="position: absolute; left: 840px; top: 360px; width: 310px; height: 200px; background-color: #ffffff; border: 1px solid #dddddd; border-radius: 8px;"></div>
+  <p style="position: absolute; left: 860px; top: 380px; width: 270px; height: 28px; font-size: 20px; font-weight: bold; color: #059669;">Finance (FICO)</p>
+  <p style="position: absolute; left: 860px; top: 420px; width: 270px; height: 100px; font-size: 14px; color: #666666; line-height: 1.6;">Parallel Accounting (SCF/IFRS). Real-time margin analysis per project.</p>
+</section>
+
+<!-- Slide 6: PS Process Flow -->
+<section class="slide" style="background-color: #ffffff;">
+  <h2 style="position: absolute; left: 80px; top: 40px; width: 800px; height: 50px; font-size: 38px; font-weight: bold; color: #2563eb;">Module: Project Systems (PS)</h2>
+  <div style="position: absolute; left: 80px; top: 110px; width: 1120px; height: 70px; background-color: #eff6ff; border-left: 6px solid #2563eb;"></div>
+  <p style="position: absolute; left: 110px; top: 135px; width: 1060px; height: 24px; font-size: 18px; color: #1e40af;">End-to-End Lifecycle: From WBS Creation to Capitalization.</p>
+
+  <!-- Process Line -->
+  <div style="position: absolute; left: 180px; top: 330px; width: 920px; height: 4px; background-color: #dddddd;"></div>
+
+  <!-- Step 1 -->
+  <div style="position: absolute; left: 100px; top: 290px; width: 80px; height: 80px; background-color: #2563eb; border-radius: 40px;"></div>
+  <p style="position: absolute; left: 100px; top: 315px; width: 80px; height: 30px; font-size: 28px; font-weight: bold; color: #ffffff; text-align: center;">1</p>
+  <p style="position: absolute; left: 60px; top: 390px; width: 160px; height: 24px; font-size: 16px; font-weight: bold; color: #334155; text-align: center;">Project Def.</p>
+  <p style="position: absolute; left: 60px; top: 420px; width: 160px; height: 20px; font-size: 13px; color: #666666; text-align: center;">WBS Structure</p>
+
+  <!-- Step 2 -->
+  <div style="position: absolute; left: 330px; top: 290px; width: 80px; height: 80px; background-color: #2563eb; border-radius: 40px;"></div>
+  <p style="position: absolute; left: 330px; top: 315px; width: 80px; height: 30px; font-size: 28px; font-weight: bold; color: #ffffff; text-align: center;">2</p>
+  <p style="position: absolute; left: 290px; top: 390px; width: 160px; height: 24px; font-size: 16px; font-weight: bold; color: #334155; text-align: center;">Cost Planning</p>
+  <p style="position: absolute; left: 290px; top: 420px; width: 160px; height: 20px; font-size: 13px; color: #666666; text-align: center;">Budget & ECP</p>
+
+  <!-- Step 3 -->
+  <div style="position: absolute; left: 560px; top: 290px; width: 80px; height: 80px; background-color: #2563eb; border-radius: 40px;"></div>
+  <p style="position: absolute; left: 560px; top: 315px; width: 80px; height: 30px; font-size: 28px; font-weight: bold; color: #ffffff; text-align: center;">3</p>
+  <p style="position: absolute; left: 520px; top: 390px; width: 160px; height: 24px; font-size: 16px; font-weight: bold; color: #334155; text-align: center;">Execution</p>
+  <p style="position: absolute; left: 520px; top: 420px; width: 160px; height: 20px; font-size: 13px; color: #666666; text-align: center;">Purchase & Confirm</p>
+
+  <!-- Step 4 -->
+  <div style="position: absolute; left: 790px; top: 290px; width: 80px; height: 80px; background-color: #2563eb; border-radius: 40px;"></div>
+  <p style="position: absolute; left: 790px; top: 315px; width: 80px; height: 30px; font-size: 28px; font-weight: bold; color: #ffffff; text-align: center;">4</p>
+  <p style="position: absolute; left: 750px; top: 390px; width: 160px; height: 24px; font-size: 16px; font-weight: bold; color: #334155; text-align: center;">Progress</p>
+  <p style="position: absolute; left: 750px; top: 420px; width: 160px; height: 20px; font-size: 13px; color: #666666; text-align: center;">POC Analysis</p>
+
+  <!-- Step 5 -->
+  <div style="position: absolute; left: 1020px; top: 290px; width: 80px; height: 80px; background-color: #2563eb; border-radius: 40px;"></div>
+  <p style="position: absolute; left: 1020px; top: 315px; width: 80px; height: 30px; font-size: 28px; font-weight: bold; color: #ffffff; text-align: center;">5</p>
+  <p style="position: absolute; left: 980px; top: 390px; width: 160px; height: 24px; font-size: 16px; font-weight: bold; color: #334155; text-align: center;">Settlement</p>
+  <p style="position: absolute; left: 980px; top: 420px; width: 160px; height: 20px; font-size: 13px; color: #666666; text-align: center;">Asset Capitalization</p>
+</section>
+
+<!-- Slide 7: PS Features -->
+<section class="slide" style="background-color: #ffffff;">
+  <h2 style="position: absolute; left: 80px; top: 40px; width: 600px; height: 50px; font-size: 38px; font-weight: bold; color: #2563eb;">PS: Key Features</h2>
+
+  <!-- Card 1 -->
+  <div style="position: absolute; left: 80px; top: 130px; width: 340px; height: 200px; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 110px; top: 160px; width: 40px; height: 40px; background-color: #2563eb; border-radius: 20px;"></div>
+  <p style="position: absolute; left: 110px; top: 168px; width: 40px; height: 24px; font-size: 18px; font-weight: bold; color: #ffffff; text-align: center;">L</p>
+  <p style="position: absolute; left: 110px; top: 220px; width: 280px; height: 28px; font-size: 20px; font-weight: bold; color: #1e293b;">Active Budget Control</p>
+  <p style="position: absolute; left: 110px; top: 255px; width: 280px; height: 60px; font-size: 14px; color: #666666; line-height: 1.5;">Hard stop on Purchase Orders if WBS budget is exceeded. Prevents overspending at source.</p>
+
+  <!-- Card 2 -->
+  <div style="position: absolute; left: 460px; top: 130px; width: 340px; height: 200px; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 490px; top: 160px; width: 40px; height: 40px; background-color: #2563eb; border-radius: 20px;"></div>
+  <p style="position: absolute; left: 490px; top: 168px; width: 40px; height: 24px; font-size: 18px; font-weight: bold; color: #ffffff; text-align: center;">T</p>
+  <p style="position: absolute; left: 490px; top: 220px; width: 280px; height: 28px; font-size: 20px; font-weight: bold; color: #1e293b;">Progress Analysis</p>
+  <p style="position: absolute; left: 490px; top: 255px; width: 280px; height: 60px; font-size: 14px; color: #666666; line-height: 1.5;">Physical percentage of completion (POC) tracking. Integrated with Milestone Trend Analysis.</p>
+
+  <!-- Card 3 -->
+  <div style="position: absolute; left: 840px; top: 130px; width: 340px; height: 200px; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 870px; top: 160px; width: 40px; height: 40px; background-color: #2563eb; border-radius: 20px;"></div>
+  <p style="position: absolute; left: 870px; top: 168px; width: 40px; height: 24px; font-size: 18px; font-weight: bold; color: #ffffff; text-align: center;">S</p>
+  <p style="position: absolute; left: 870px; top: 220px; width: 280px; height: 28px; font-size: 20px; font-weight: bold; color: #1e293b;">Investment Management</p>
+  <p style="position: absolute; left: 870px; top: 255px; width: 280px; height: 60px; font-size: 14px; color: #666666; line-height: 1.5;">Manage capital investment programs. Drill down from Program to specific WBS elements.</p>
+
+  <!-- Card 4 -->
+  <div style="position: absolute; left: 80px; top: 370px; width: 340px; height: 200px; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 110px; top: 400px; width: 40px; height: 40px; background-color: #2563eb; border-radius: 20px;"></div>
+  <p style="position: absolute; left: 110px; top: 408px; width: 40px; height: 24px; font-size: 18px; font-weight: bold; color: #ffffff; text-align: center;">C</p>
+  <p style="position: absolute; left: 110px; top: 460px; width: 280px; height: 28px; font-size: 20px; font-weight: bold; color: #1e293b;">Claim Management</p>
+  <p style="position: absolute; left: 110px; top: 495px; width: 280px; height: 60px; font-size: 14px; color: #666666; line-height: 1.5;">Track extra works and variations. Ensure all scope changes are billed to the client.</p>
+</section>
+
+<!-- Slide 8: PS Value -->
+<section class="slide" style="background-color: #ffffff;">
+  <h2 style="position: absolute; left: 80px; top: 40px; width: 600px; height: 50px; font-size: 38px; font-weight: bold; color: #2563eb;">PS: Business Value</h2>
+
+  <!-- Pain Card -->
+  <div style="position: absolute; left: 80px; top: 130px; width: 520px; height: 380px; background-color: #fff1f2; border: 1px solid #fecdd3; border-radius: 12px;"></div>
+  <div style="position: absolute; left: 120px; top: 180px; width: 60px; height: 60px; background-color: #e11d48; border-radius: 30px;"></div>
+  <p style="position: absolute; left: 130px; top: 195px; width: 40px; height: 30px; font-size: 24px; font-weight: bold; color: #ffffff; text-align: center;">!</p>
+  <p style="position: absolute; left: 120px; top: 260px; width: 440px; height: 36px; font-size: 26px; font-weight: bold; color: #9f1239;">Current Pain</p>
+  <p style="position: absolute; left: 120px; top: 310px; width: 440px; height: 150px; font-size: 18px; color: #881337; line-height: 1.6;">Sites send weekly Excel reports via email. HQ has no real-time visibility into actual cost vs plan until month-end.</p>
+
+  <!-- Value Card -->
+  <div style="position: absolute; left: 640px; top: 130px; width: 520px; height: 380px; background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px;"></div>
+  <div style="position: absolute; left: 680px; top: 180px; width: 60px; height: 60px; background-color: #059669; border-radius: 30px;"></div>
+  <p style="position: absolute; left: 690px; top: 195px; width: 40px; height: 30px; font-size: 24px; font-weight: bold; color: #ffffff; text-align: center;">✓</p>
+  <p style="position: absolute; left: 680px; top: 260px; width: 440px; height: 36px; font-size: 26px; font-weight: bold; color: #065f46;">SAP S/4HANA Value</p>
+  <p style="position: absolute; left: 680px; top: 310px; width: 440px; height: 150px; font-size: 18px; color: #064e3b; line-height: 1.6;">Real-time Cost & Revenue Recognition. Site engineers enter progress on mobile tablets; Financials update instantly using the POC method.</p>
+</section>
+
+<!-- Slide 9: MM Process Flow -->
+<section class="slide" style="background-color: #ffffff;">
+  <h2 style="position: absolute; left: 80px; top: 40px; width: 800px; height: 50px; font-size: 38px; font-weight: bold; color: #ea580c;">Module: Supply Chain (MM)</h2>
+  <div style="position: absolute; left: 80px; top: 110px; width: 1120px; height: 70px; background-color: #fff7ed; border-left: 6px solid #ea580c;"></div>
+  <p style="position: absolute; left: 110px; top: 135px; width: 1060px; height: 24px; font-size: 18px; color: #9a3412;">Streamlined Procure-to-Pay (P2P) with Digital Approvals.</p>
+
+  <!-- Process Line -->
+  <div style="position: absolute; left: 180px; top: 330px; width: 920px; height: 4px; background-color: #dddddd;"></div>
+
+  <!-- Steps -->
+  <div style="position: absolute; left: 100px; top: 290px; width: 80px; height: 80px; background-color: #ea580c; border-radius: 40px;"></div>
+  <p style="position: absolute; left: 100px; top: 315px; width: 80px; height: 30px; font-size: 28px; font-weight: bold; color: #ffffff; text-align: center;">1</p>
+  <p style="position: absolute; left: 60px; top: 390px; width: 160px; height: 24px; font-size: 16px; font-weight: bold; color: #334155; text-align: center;">Purchase Req</p>
+  <p style="position: absolute; left: 60px; top: 420px; width: 160px; height: 20px; font-size: 13px; color: #666666; text-align: center;">Site Demand</p>
+
+  <div style="position: absolute; left: 330px; top: 290px; width: 80px; height: 80px; background-color: #ea580c; border-radius: 40px;"></div>
+  <p style="position: absolute; left: 330px; top: 315px; width: 80px; height: 30px; font-size: 28px; font-weight: bold; color: #ffffff; text-align: center;">2</p>
+  <p style="position: absolute; left: 290px; top: 390px; width: 160px; height: 24px; font-size: 16px; font-weight: bold; color: #334155; text-align: center;">Release</p>
+  <p style="position: absolute; left: 290px; top: 420px; width: 160px; height: 20px; font-size: 13px; color: #666666; text-align: center;">Digital Approval</p>
+
+  <div style="position: absolute; left: 560px; top: 290px; width: 80px; height: 80px; background-color: #ea580c; border-radius: 40px;"></div>
+  <p style="position: absolute; left: 560px; top: 315px; width: 80px; height: 30px; font-size: 28px; font-weight: bold; color: #ffffff; text-align: center;">3</p>
+  <p style="position: absolute; left: 520px; top: 390px; width: 160px; height: 24px; font-size: 16px; font-weight: bold; color: #334155; text-align: center;">PO</p>
+  <p style="position: absolute; left: 520px; top: 420px; width: 160px; height: 20px; font-size: 13px; color: #666666; text-align: center;">Vendor Contract</p>
+
+  <div style="position: absolute; left: 790px; top: 290px; width: 80px; height: 80px; background-color: #ea580c; border-radius: 40px;"></div>
+  <p style="position: absolute; left: 790px; top: 315px; width: 80px; height: 30px; font-size: 28px; font-weight: bold; color: #ffffff; text-align: center;">4</p>
+  <p style="position: absolute; left: 750px; top: 390px; width: 160px; height: 24px; font-size: 16px; font-weight: bold; color: #334155; text-align: center;">Goods Receipt</p>
+  <p style="position: absolute; left: 750px; top: 420px; width: 160px; height: 20px; font-size: 13px; color: #666666; text-align: center;">Stock Update</p>
+
+  <div style="position: absolute; left: 1020px; top: 290px; width: 80px; height: 80px; background-color: #ea580c; border-radius: 40px;"></div>
+  <p style="position: absolute; left: 1020px; top: 315px; width: 80px; height: 30px; font-size: 28px; font-weight: bold; color: #ffffff; text-align: center;">5</p>
+  <p style="position: absolute; left: 980px; top: 390px; width: 160px; height: 24px; font-size: 16px; font-weight: bold; color: #334155; text-align: center;">Invoice Verify</p>
+  <p style="position: absolute; left: 980px; top: 420px; width: 160px; height: 20px; font-size: 13px; color: #666666; text-align: center;">3-Way Match</p>
+</section>
+
+<!-- Slide 10: MM Features -->
+<section class="slide" style="background-color: #ffffff;">
+  <h2 style="position: absolute; left: 80px; top: 40px; width: 600px; height: 50px; font-size: 38px; font-weight: bold; color: #ea580c;">MM: Key Features</h2>
+
+  <div style="position: absolute; left: 80px; top: 130px; width: 340px; height: 200px; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 110px; top: 160px; width: 40px; height: 40px; background-color: #ea580c; border-radius: 20px;"></div>
+  <p style="position: absolute; left: 110px; top: 168px; width: 40px; height: 24px; font-size: 18px; font-weight: bold; color: #ffffff; text-align: center;">M</p>
+  <p style="position: absolute; left: 110px; top: 220px; width: 280px; height: 28px; font-size: 20px; font-weight: bold; color: #1e293b;">MRP Areas</p>
+  <p style="position: absolute; left: 110px; top: 255px; width: 280px; height: 60px; font-size: 14px; color: #666666; line-height: 1.5;">Plan materials specifically per construction site. System calculates cement/steel needs based on project schedule.</p>
+
+  <div style="position: absolute; left: 460px; top: 130px; width: 340px; height: 200px; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 490px; top: 160px; width: 40px; height: 40px; background-color: #ea580c; border-radius: 20px;"></div>
+  <p style="position: absolute; left: 490px; top: 168px; width: 40px; height: 24px; font-size: 18px; font-weight: bold; color: #ffffff; text-align: center;">S</p>
+  <p style="position: absolute; left: 490px; top: 220px; width: 280px; height: 28px; font-size: 20px; font-weight: bold; color: #1e293b;">Service Entry Sheets</p>
+  <p style="position: absolute; left: 490px; top: 255px; width: 280px; height: 60px; font-size: 14px; color: #666666; line-height: 1.5;">Digital management of subcontractors. Engineers confirm work via iPad, auto-generating financial accruals.</p>
+
+  <div style="position: absolute; left: 840px; top: 130px; width: 340px; height: 200px; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 870px; top: 160px; width: 40px; height: 40px; background-color: #ea580c; border-radius: 20px;"></div>
+  <p style="position: absolute; left: 870px; top: 168px; width: 40px; height: 24px; font-size: 18px; font-weight: bold; color: #ffffff; text-align: center;">V</p>
+  <p style="position: absolute; left: 870px; top: 220px; width: 280px; height: 28px; font-size: 20px; font-weight: bold; color: #1e293b;">Split Valuation</p>
+  <p style="position: absolute; left: 870px; top: 255px; width: 280px; height: 60px; font-size: 14px; color: #666666; line-height: 1.5;">Track new vs. refurbished spare parts separately. Accurately track repair cycle costs for expensive components.</p>
+</section>
+
+<!-- Slide 11: MM Value -->
+<section class="slide" style="background-color: #ffffff;">
+  <h2 style="position: absolute; left: 80px; top: 40px; width: 600px; height: 50px; font-size: 38px; font-weight: bold; color: #ea580c;">MM: Business Value</h2>
+
+  <div style="position: absolute; left: 80px; top: 130px; width: 520px; height: 380px; background-color: #fff1f2; border: 1px solid #fecdd3; border-radius: 12px;"></div>
+  <div style="position: absolute; left: 120px; top: 180px; width: 60px; height: 60px; background-color: #e11d48; border-radius: 30px;"></div>
+  <p style="position: absolute; left: 130px; top: 195px; width: 40px; height: 30px; font-size: 24px; font-weight: bold; color: #ffffff; text-align: center;">X</p>
+  <p style="position: absolute; left: 120px; top: 260px; width: 440px; height: 36px; font-size: 26px; font-weight: bold; color: #9f1239;">Current Pain</p>
+  <p style="position: absolute; left: 120px; top: 310px; width: 440px; height: 150px; font-size: 18px; color: #881337; line-height: 1.6;">"Phantom Inventory" across 40 sites. Sites panic-buy cement locally at retail prices because they can't see central stock.</p>
+
+  <div style="position: absolute; left: 640px; top: 130px; width: 520px; height: 380px; background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px;"></div>
+  <div style="position: absolute; left: 680px; top: 180px; width: 60px; height: 60px; background-color: #059669; border-radius: 30px;"></div>
+  <p style="position: absolute; left: 690px; top: 192px; width: 40px; height: 30px; font-size: 20px; font-weight: bold; color: #ffffff; text-align: center;">-15%</p>
+  <p style="position: absolute; left: 680px; top: 260px; width: 440px; height: 36px; font-size: 26px; font-weight: bold; color: #065f46;">SAP S/4HANA Value</p>
+  <p style="position: absolute; left: 680px; top: 310px; width: 440px; height: 150px; font-size: 18px; color: #064e3b; line-height: 1.6;">-15% Inventory Costs. Global visibility allows stock transfers between sites instead of new purchases. Bulk framework agreements reduce unit costs.</p>
+</section>
+
+<!-- Slide 12: PM Process Flow -->
+<section class="slide" style="background-color: #ffffff;">
+  <h2 style="position: absolute; left: 80px; top: 40px; width: 800px; height: 50px; font-size: 38px; font-weight: bold; color: #7c3aed;">Module: Plant Maintenance (PM)</h2>
+  <div style="position: absolute; left: 80px; top: 110px; width: 1120px; height: 70px; background-color: #faf5ff; border-left: 6px solid #7c3aed;"></div>
+  <p style="position: absolute; left: 110px; top: 135px; width: 1060px; height: 24px; font-size: 18px; color: #6b21a8;">From Breakdown Alert to Technician Assignment.</p>
+
+  <div style="position: absolute; left: 180px; top: 330px; width: 920px; height: 4px; background-color: #dddddd;"></div>
+
+  <div style="position: absolute; left: 100px; top: 290px; width: 80px; height: 80px; background-color: #7c3aed; border-radius: 40px;"></div>
+  <p style="position: absolute; left: 100px; top: 315px; width: 80px; height: 30px; font-size: 28px; font-weight: bold; color: #ffffff; text-align: center;">1</p>
+  <p style="position: absolute; left: 60px; top: 390px; width: 160px; height: 24px; font-size: 16px; font-weight: bold; color: #334155; text-align: center;">Notification</p>
+  <p style="position: absolute; left: 60px; top: 420px; width: 160px; height: 20px; font-size: 13px; color: #666666; text-align: center;">Breakdown Alert</p>
+
+  <div style="position: absolute; left: 330px; top: 290px; width: 80px; height: 80px; background-color: #7c3aed; border-radius: 40px;"></div>
+  <p style="position: absolute; left: 330px; top: 315px; width: 80px; height: 30px; font-size: 28px; font-weight: bold; color: #ffffff; text-align: center;">2</p>
+  <p style="position: absolute; left: 290px; top: 390px; width: 160px; height: 24px; font-size: 16px; font-weight: bold; color: #334155; text-align: center;">Planning</p>
+  <p style="position: absolute; left: 290px; top: 420px; width: 160px; height: 20px; font-size: 13px; color: #666666; text-align: center;">Parts & Labor</p>
+
+  <div style="position: absolute; left: 560px; top: 290px; width: 80px; height: 80px; background-color: #7c3aed; border-radius: 40px;"></div>
+  <p style="position: absolute; left: 560px; top: 315px; width: 80px; height: 30px; font-size: 28px; font-weight: bold; color: #ffffff; text-align: center;">3</p>
+  <p style="position: absolute; left: 520px; top: 390px; width: 160px; height: 24px; font-size: 16px; font-weight: bold; color: #334155; text-align: center;">Scheduling</p>
+  <p style="position: absolute; left: 520px; top: 420px; width: 160px; height: 20px; font-size: 13px; color: #666666; text-align: center;">Dispatch</p>
+
+  <div style="position: absolute; left: 790px; top: 290px; width: 80px; height: 80px; background-color: #7c3aed; border-radius: 40px;"></div>
+  <p style="position: absolute; left: 790px; top: 315px; width: 80px; height: 30px; font-size: 28px; font-weight: bold; color: #ffffff; text-align: center;">4</p>
+  <p style="position: absolute; left: 750px; top: 390px; width: 160px; height: 24px; font-size: 16px; font-weight: bold; color: #334155; text-align: center;">Execution</p>
+  <p style="position: absolute; left: 750px; top: 420px; width: 160px; height: 20px; font-size: 13px; color: #666666; text-align: center;">Repair Work</p>
+
+  <div style="position: absolute; left: 1020px; top: 290px; width: 80px; height: 80px; background-color: #7c3aed; border-radius: 40px;"></div>
+  <p style="position: absolute; left: 1020px; top: 315px; width: 80px; height: 30px; font-size: 28px; font-weight: bold; color: #ffffff; text-align: center;">5</p>
+  <p style="position: absolute; left: 980px; top: 390px; width: 160px; height: 24px; font-size: 16px; font-weight: bold; color: #334155; text-align: center;">Completion</p>
+  <p style="position: absolute; left: 980px; top: 420px; width: 160px; height: 20px; font-size: 13px; color: #666666; text-align: center;">Tech Close</p>
+</section>
+
+<!-- Slide 13: PM Features -->
+<section class="slide" style="background-color: #ffffff;">
+  <h2 style="position: absolute; left: 80px; top: 40px; width: 600px; height: 50px; font-size: 38px; font-weight: bold; color: #7c3aed;">PM: Key Features</h2>
+
+  <div style="position: absolute; left: 80px; top: 130px; width: 340px; height: 200px; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 110px; top: 160px; width: 40px; height: 40px; background-color: #7c3aed; border-radius: 20px;"></div>
+  <p style="position: absolute; left: 110px; top: 168px; width: 40px; height: 24px; font-size: 18px; font-weight: bold; color: #ffffff; text-align: center;">F</p>
+  <p style="position: absolute; left: 110px; top: 220px; width: 280px; height: 28px; font-size: 20px; font-weight: bold; color: #1e293b;">Fleet Management</p>
+  <p style="position: absolute; left: 110px; top: 255px; width: 280px; height: 60px; font-size: 14px; color: #666666; line-height: 1.5;">Track fuel, odometer, and engine hours for 850+ units. Integrated with fuel sensors (IoT ready).</p>
+
+  <div style="position: absolute; left: 460px; top: 130px; width: 340px; height: 200px; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 490px; top: 160px; width: 40px; height: 40px; background-color: #7c3aed; border-radius: 20px;"></div>
+  <p style="position: absolute; left: 490px; top: 168px; width: 40px; height: 24px; font-size: 18px; font-weight: bold; color: #ffffff; text-align: center;">P</p>
+  <p style="position: absolute; left: 490px; top: 220px; width: 280px; height: 28px; font-size: 20px; font-weight: bold; color: #1e293b;">Preventive Plans</p>
+  <p style="position: absolute; left: 490px; top: 255px; width: 280px; height: 60px; font-size: 14px; color: #666666; line-height: 1.5;">Auto-trigger service orders every 500 engine hours or 10,000 km. Shift from reactive to proactive.</p>
+
+  <div style="position: absolute; left: 840px; top: 130px; width: 340px; height: 200px; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 870px; top: 160px; width: 40px; height: 40px; background-color: #7c3aed; border-radius: 20px;"></div>
+  <p style="position: absolute; left: 870px; top: 168px; width: 40px; height: 24px; font-size: 18px; font-weight: bold; color: #ffffff; text-align: center;">R</p>
+  <p style="position: absolute; left: 870px; top: 220px; width: 280px; height: 28px; font-size: 20px; font-weight: bold; color: #1e293b;">Refurbishment</p>
+  <p style="position: absolute; left: 870px; top: 255px; width: 280px; height: 60px; font-size: 14px; color: #666666; line-height: 1.5;">Manage the repair process of high-value rotables (e.g., Caterpillar Engines) in internal workshops.</p>
+</section>
+
+<!-- Slide 14: PM Value -->
+<section class="slide" style="background-color: #ffffff;">
+  <h2 style="position: absolute; left: 80px; top: 40px; width: 600px; height: 50px; font-size: 38px; font-weight: bold; color: #7c3aed;">PM: Business Value</h2>
+
+  <div style="position: absolute; left: 80px; top: 130px; width: 520px; height: 380px; background-color: #fff1f2; border: 1px solid #fecdd3; border-radius: 12px;"></div>
+  <div style="position: absolute; left: 120px; top: 180px; width: 60px; height: 60px; background-color: #e11d48; border-radius: 30px;"></div>
+  <p style="position: absolute; left: 130px; top: 195px; width: 40px; height: 30px; font-size: 24px; font-weight: bold; color: #ffffff; text-align: center;">X</p>
+  <p style="position: absolute; left: 120px; top: 260px; width: 440px; height: 36px; font-size: 26px; font-weight: bold; color: #9f1239;">Current Pain</p>
+  <p style="position: absolute; left: 120px; top: 310px; width: 440px; height: 150px; font-size: 18px; color: #881337; line-height: 1.6;">Reactive maintenance. Machinery sits idle in the desert waiting for parts because breakdowns weren't predicted.</p>
+
+  <div style="position: absolute; left: 640px; top: 130px; width: 520px; height: 380px; background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px;"></div>
+  <div style="position: absolute; left: 680px; top: 180px; width: 60px; height: 60px; background-color: #059669; border-radius: 30px;"></div>
+  <p style="position: absolute; left: 685px; top: 192px; width: 50px; height: 30px; font-size: 16px; font-weight: bold; color: #ffffff; text-align: center;">90%</p>
+  <p style="position: absolute; left: 680px; top: 260px; width: 440px; height: 36px; font-size: 26px; font-weight: bold; color: #065f46;">SAP S/4HANA Value</p>
+  <p style="position: absolute; left: 680px; top: 310px; width: 440px; height: 150px; font-size: 18px; color: #064e3b; line-height: 1.6;">90% Fleet Availability. Predictive maintenance schedules ensure parts are available before failure occurs, maximizing asset uptime.</p>
+</section>
+
+<!-- Slide 15: FICO Process Flow -->
+<section class="slide" style="background-color: #ffffff;">
+  <h2 style="position: absolute; left: 80px; top: 40px; width: 800px; height: 50px; font-size: 38px; font-weight: bold; color: #059669;">Module: Finance (FICO)</h2>
+  <div style="position: absolute; left: 80px; top: 110px; width: 1120px; height: 70px; background-color: #ecfdf5; border-left: 6px solid #059669;"></div>
+  <p style="position: absolute; left: 110px; top: 135px; width: 1060px; height: 24px; font-size: 18px; color: #065f46;">Universal Journal Integration & Compliance.</p>
+
+  <div style="position: absolute; left: 180px; top: 330px; width: 920px; height: 4px; background-color: #dddddd;"></div>
+
+  <div style="position: absolute; left: 100px; top: 290px; width: 80px; height: 80px; background-color: #059669; border-radius: 40px;"></div>
+  <p style="position: absolute; left: 100px; top: 315px; width: 80px; height: 30px; font-size: 28px; font-weight: bold; color: #ffffff; text-align: center;">1</p>
+  <p style="position: absolute; left: 60px; top: 390px; width: 160px; height: 24px; font-size: 16px; font-weight: bold; color: #334155; text-align: center;">G/L</p>
+  <p style="position: absolute; left: 60px; top: 420px; width: 160px; height: 20px; font-size: 13px; color: #666666; text-align: center;">General Ledger</p>
+
+  <div style="position: absolute; left: 330px; top: 290px; width: 80px; height: 80px; background-color: #059669; border-radius: 40px;"></div>
+  <p style="position: absolute; left: 330px; top: 315px; width: 80px; height: 30px; font-size: 28px; font-weight: bold; color: #ffffff; text-align: center;">2</p>
+  <p style="position: absolute; left: 290px; top: 390px; width: 160px; height: 24px; font-size: 16px; font-weight: bold; color: #334155; text-align: center;">Sub-ledgers</p>
+  <p style="position: absolute; left: 290px; top: 420px; width: 160px; height: 20px; font-size: 13px; color: #666666; text-align: center;">AP / AR</p>
+
+  <div style="position: absolute; left: 560px; top: 290px; width: 80px; height: 80px; background-color: #059669; border-radius: 40px;"></div>
+  <p style="position: absolute; left: 560px; top: 315px; width: 80px; height: 30px; font-size: 28px; font-weight: bold; color: #ffffff; text-align: center;">3</p>
+  <p style="position: absolute; left: 520px; top: 390px; width: 160px; height: 24px; font-size: 16px; font-weight: bold; color: #334155; text-align: center;">Asset Acct</p>
+  <p style="position: absolute; left: 520px; top: 420px; width: 160px; height: 20px; font-size: 13px; color: #666666; text-align: center;">Depreciation</p>
+
+  <div style="position: absolute; left: 790px; top: 290px; width: 80px; height: 80px; background-color: #059669; border-radius: 40px;"></div>
+  <p style="position: absolute; left: 790px; top: 315px; width: 80px; height: 30px; font-size: 28px; font-weight: bold; color: #ffffff; text-align: center;">4</p>
+  <p style="position: absolute; left: 750px; top: 390px; width: 160px; height: 24px; font-size: 16px; font-weight: bold; color: #334155; text-align: center;">Controlling</p>
+  <p style="position: absolute; left: 750px; top: 420px; width: 160px; height: 20px; font-size: 13px; color: #666666; text-align: center;">Cost Analysis</p>
+
+  <div style="position: absolute; left: 1020px; top: 290px; width: 80px; height: 80px; background-color: #059669; border-radius: 40px;"></div>
+  <p style="position: absolute; left: 1020px; top: 315px; width: 80px; height: 30px; font-size: 28px; font-weight: bold; color: #ffffff; text-align: center;">5</p>
+  <p style="position: absolute; left: 980px; top: 390px; width: 160px; height: 24px; font-size: 16px; font-weight: bold; color: #334155; text-align: center;">Reporting</p>
+  <p style="position: absolute; left: 980px; top: 420px; width: 160px; height: 20px; font-size: 13px; color: #666666; text-align: center;">Financial Stmts</p>
+</section>
+
+<!-- Slide 16: FICO Features -->
+<section class="slide" style="background-color: #ffffff;">
+  <h2 style="position: absolute; left: 80px; top: 40px; width: 600px; height: 50px; font-size: 38px; font-weight: bold; color: #059669;">FICO: Key Features</h2>
+
+  <div style="position: absolute; left: 80px; top: 130px; width: 340px; height: 200px; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 110px; top: 160px; width: 40px; height: 40px; background-color: #059669; border-radius: 20px;"></div>
+  <p style="position: absolute; left: 110px; top: 168px; width: 40px; height: 24px; font-size: 18px; font-weight: bold; color: #ffffff; text-align: center;">P</p>
+  <p style="position: absolute; left: 110px; top: 220px; width: 280px; height: 28px; font-size: 20px; font-weight: bold; color: #1e293b;">Parallel Accounting</p>
+  <p style="position: absolute; left: 110px; top: 255px; width: 280px; height: 60px; font-size: 14px; color: #666666; line-height: 1.5;">Compliant with local Algerian SCF standards while simultaneously reporting in IFRS for global stakeholders.</p>
+
+  <div style="position: absolute; left: 460px; top: 130px; width: 340px; height: 200px; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 490px; top: 160px; width: 40px; height: 40px; background-color: #059669; border-radius: 20px;"></div>
+  <p style="position: absolute; left: 490px; top: 168px; width: 40px; height: 24px; font-size: 18px; font-weight: bold; color: #ffffff; text-align: center;">M</p>
+  <p style="position: absolute; left: 490px; top: 220px; width: 280px; height: 28px; font-size: 20px; font-weight: bold; color: #1e293b;">Margin Analysis</p>
+  <p style="position: absolute; left: 490px; top: 255px; width: 280px; height: 60px; font-size: 14px; color: #666666; line-height: 1.5;">Real-time profitability analysis per project WBS element. Know exactly which sites are profitable.</p>
+
+  <div style="position: absolute; left: 840px; top: 130px; width: 340px; height: 200px; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 870px; top: 160px; width: 40px; height: 40px; background-color: #059669; border-radius: 20px;"></div>
+  <p style="position: absolute; left: 870px; top: 168px; width: 40px; height: 24px; font-size: 18px; font-weight: bold; color: #ffffff; text-align: center;">B</p>
+  <p style="position: absolute; left: 870px; top: 220px; width: 280px; height: 28px; font-size: 20px; font-weight: bold; color: #1e293b;">Bank Integration</p>
+  <p style="position: absolute; left: 870px; top: 255px; width: 280px; height: 60px; font-size: 14px; color: #666666; line-height: 1.5;">Automated reconciliation with local banks (CPA/BEA). Automatic clearing of incoming payments.</p>
+</section>
+
+<!-- Slide 17: FICO Value -->
+<section class="slide" style="background-color: #ffffff;">
+  <h2 style="position: absolute; left: 80px; top: 40px; width: 600px; height: 50px; font-size: 38px; font-weight: bold; color: #059669;">FICO: Business Value</h2>
+
+  <div style="position: absolute; left: 80px; top: 130px; width: 520px; height: 380px; background-color: #fff1f2; border: 1px solid #fecdd3; border-radius: 12px;"></div>
+  <div style="position: absolute; left: 120px; top: 180px; width: 60px; height: 60px; background-color: #e11d48; border-radius: 30px;"></div>
+  <p style="position: absolute; left: 125px; top: 192px; width: 50px; height: 30px; font-size: 16px; font-weight: bold; color: #ffffff; text-align: center;">20+</p>
+  <p style="position: absolute; left: 120px; top: 260px; width: 440px; height: 36px; font-size: 26px; font-weight: bold; color: #9f1239;">Current Pain</p>
+  <p style="position: absolute; left: 120px; top: 310px; width: 440px; height: 150px; font-size: 18px; color: #881337; line-height: 1.6;">Month-end closing takes 20+ days. Manual consolidation of trial balances from regional offices is error-prone.</p>
+
+  <div style="position: absolute; left: 640px; top: 130px; width: 520px; height: 380px; background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px;"></div>
+  <div style="position: absolute; left: 680px; top: 180px; width: 60px; height: 60px; background-color: #059669; border-radius: 30px;"></div>
+  <p style="position: absolute; left: 685px; top: 192px; width: 50px; height: 30px; font-size: 16px; font-weight: bold; color: #ffffff; text-align: center;">&lt;3</p>
+  <p style="position: absolute; left: 680px; top: 260px; width: 440px; height: 36px; font-size: 26px; font-weight: bold; color: #065f46;">SAP S/4HANA Value</p>
+  <p style="position: absolute; left: 680px; top: 310px; width: 440px; height: 150px; font-size: 18px; color: #064e3b; line-height: 1.6;">Continuous Accounting. Universal Journal enables "Soft Close" at any time. Month-end closing reduced to less than 3 days.</p>
+</section>
+
+<!-- Slide 18: Methodology -->
+<section class="slide" style="background-color: #ffffff;">
+  <h2 style="position: absolute; left: 80px; top: 40px; width: 800px; height: 50px; font-size: 38px; font-weight: bold; color: #003366;">Methodology: SAP Activate</h2>
+
+  <!-- Phase Boxes -->
+  <div style="position: absolute; left: 80px; top: 180px; width: 160px; height: 200px; background-color: #e0e0e0; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 100px; top: 200px; width: 30px; height: 30px; background-color: #94a3b8; border-radius: 15px;"></div>
+  <p style="position: absolute; left: 100px; top: 204px; width: 30px; height: 22px; font-size: 14px; font-weight: bold; color: #ffffff; text-align: center;">1</p>
+  <p style="position: absolute; left: 100px; top: 250px; width: 120px; height: 28px; font-size: 20px; font-weight: bold; color: #475569;">Discover</p>
+  <p style="position: absolute; left: 100px; top: 290px; width: 120px; height: 60px; font-size: 13px; color: #666666;">Value Scoping</p>
+
+  <div style="position: absolute; left: 260px; top: 180px; width: 160px; height: 200px; background-color: #dbeafe; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 280px; top: 200px; width: 30px; height: 30px; background-color: #60a5fa; border-radius: 15px;"></div>
+  <p style="position: absolute; left: 280px; top: 204px; width: 30px; height: 22px; font-size: 14px; font-weight: bold; color: #ffffff; text-align: center;">2</p>
+  <p style="position: absolute; left: 280px; top: 250px; width: 120px; height: 28px; font-size: 20px; font-weight: bold; color: #1e40af;">Prepare</p>
+  <p style="position: absolute; left: 280px; top: 290px; width: 120px; height: 60px; font-size: 13px; color: #1e3a8a;">Project Setup</p>
+
+  <div style="position: absolute; left: 440px; top: 140px; width: 200px; height: 280px; background-color: #2563eb; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 470px; top: 170px; width: 40px; height: 40px; background-color: #ffffff; border-radius: 20px;"></div>
+  <p style="position: absolute; left: 470px; top: 180px; width: 40px; height: 22px; font-size: 18px; font-weight: bold; color: #2563eb; text-align: center;">3</p>
+  <p style="position: absolute; left: 470px; top: 240px; width: 140px; height: 36px; font-size: 26px; font-weight: bold; color: #ffffff;">Explore</p>
+  <p style="position: absolute; left: 470px; top: 290px; width: 140px; height: 80px; font-size: 15px; color: #bfdbfe; line-height: 1.5;">Fit-to-Standard Workshops</p>
+
+  <div style="position: absolute; left: 660px; top: 180px; width: 160px; height: 200px; background-color: #dbeafe; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 680px; top: 200px; width: 30px; height: 30px; background-color: #60a5fa; border-radius: 15px;"></div>
+  <p style="position: absolute; left: 680px; top: 204px; width: 30px; height: 22px; font-size: 14px; font-weight: bold; color: #ffffff; text-align: center;">4</p>
+  <p style="position: absolute; left: 680px; top: 250px; width: 120px; height: 28px; font-size: 20px; font-weight: bold; color: #1e40af;">Realize</p>
+  <p style="position: absolute; left: 680px; top: 290px; width: 120px; height: 60px; font-size: 13px; color: #1e3a8a;">Config & Dev</p>
+
+  <div style="position: absolute; left: 840px; top: 180px; width: 160px; height: 200px; background-color: #e0e7ff; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 860px; top: 200px; width: 30px; height: 30px; background-color: #818cf8; border-radius: 15px;"></div>
+  <p style="position: absolute; left: 860px; top: 204px; width: 30px; height: 22px; font-size: 14px; font-weight: bold; color: #ffffff; text-align: center;">5</p>
+  <p style="position: absolute; left: 860px; top: 250px; width: 120px; height: 28px; font-size: 20px; font-weight: bold; color: #3730a3;">Deploy</p>
+  <p style="position: absolute; left: 860px; top: 290px; width: 120px; height: 60px; font-size: 13px; color: #312e81;">Cutover</p>
+
+  <div style="position: absolute; left: 1020px; top: 180px; width: 160px; height: 200px; background-color: #dcfce7; border-radius: 8px;"></div>
+  <div style="position: absolute; left: 1040px; top: 200px; width: 30px; height: 30px; background-color: #4ade80; border-radius: 15px;"></div>
+  <p style="position: absolute; left: 1040px; top: 204px; width: 30px; height: 22px; font-size: 14px; font-weight: bold; color: #ffffff; text-align: center;">6</p>
+  <p style="position: absolute; left: 1040px; top: 250px; width: 120px; height: 28px; font-size: 20px; font-weight: bold; color: #166534;">Run</p>
+  <p style="position: absolute; left: 1040px; top: 290px; width: 120px; height: 60px; font-size: 13px; color: #14532d;">Hypercare</p>
+
+  <p style="position: absolute; left: 80px; top: 450px; width: 1120px; height: 30px; font-size: 16px; color: #666666; text-align: center;">Adopting standard processes to minimize custom code and ensure future-proof upgrades.</p>
+</section>
+
+<!-- Slide 19: Team Organization -->
+<section class="slide" style="background-color: #ffffff;">
+  <h2 style="position: absolute; left: 80px; top: 40px; width: 600px; height: 50px; font-size: 38px; font-weight: bold; color: #003366;">Project Organization</h2>
+
+  <!-- Steering Committee -->
+  <div style="position: absolute; left: 440px; top: 130px; width: 400px; height: 80px; background-color: #1e293b; border-radius: 8px;"></div>
+  <p style="position: absolute; left: 440px; top: 150px; width: 400px; height: 28px; font-size: 22px; font-weight: bold; color: #ffffff; text-align: center;">Steering Committee</p>
+  <p style="position: absolute; left: 440px; top: 180px; width: 400px; height: 20px; font-size: 13px; color: #94a3b8; text-align: center;">SNTP Execs + Partner Director</p>
+
+  <!-- Connector Lines -->
+  <div style="position: absolute; left: 638px; top: 210px; width: 4px; height: 40px; background-color: #cccccc;"></div>
+  <div style="position: absolute; left: 340px; top: 250px; width: 600px; height: 4px; background-color: #cccccc;"></div>
+  <div style="position: absolute; left: 340px; top: 250px; width: 4px; height: 40px; background-color: #cccccc;"></div>
+  <div style="position: absolute; left: 936px; top: 250px; width: 4px; height: 40px; background-color: #cccccc;"></div>
+
+  <!-- PM Boxes -->
+  <div style="position: absolute; left: 240px; top: 290px; width: 200px; height: 70px; background-color: #2563eb; border-radius: 8px;"></div>
+  <p style="position: absolute; left: 240px; top: 315px; width: 200px; height: 24px; font-size: 17px; font-weight: bold; color: #ffffff; text-align: center;">PM (Integrator)</p>
+
+  <div style="position: absolute; left: 840px; top: 290px; width: 200px; height: 70px; background-color: #2563eb; border-radius: 8px;"></div>
+  <p style="position: absolute; left: 840px; top: 315px; width: 200px; height: 24px; font-size: 17px; font-weight: bold; color: #ffffff; text-align: center;">PM (SNTP)</p>
+
+  <!-- Team Lead Cards -->
+  <div style="position: absolute; left: 80px; top: 430px; width: 200px; height: 100px; background-color: #ffffff; border: 1px solid #dddddd; border-radius: 8px; border-top: 4px solid #2563eb;"></div>
+  <p style="position: absolute; left: 80px; top: 470px; width: 200px; height: 24px; font-size: 15px; font-weight: bold; color: #334155; text-align: center;">Finance Lead</p>
+
+  <div style="position: absolute; left: 310px; top: 430px; width: 200px; height: 100px; background-color: #ffffff; border: 1px solid #dddddd; border-radius: 8px; border-top: 4px solid #ea580c;"></div>
+  <p style="position: absolute; left: 310px; top: 470px; width: 200px; height: 24px; font-size: 15px; font-weight: bold; color: #334155; text-align: center;">Logistics Lead</p>
+
+  <div style="position: absolute; left: 540px; top: 430px; width: 200px; height: 100px; background-color: #ffffff; border: 1px solid #dddddd; border-radius: 8px; border-top: 4px solid #059669;"></div>
+  <p style="position: absolute; left: 540px; top: 470px; width: 200px; height: 24px; font-size: 15px; font-weight: bold; color: #334155; text-align: center;">Projects Lead</p>
+
+  <div style="position: absolute; left: 770px; top: 430px; width: 200px; height: 100px; background-color: #ffffff; border: 1px solid #dddddd; border-radius: 8px; border-top: 4px solid #7c3aed;"></div>
+  <p style="position: absolute; left: 770px; top: 470px; width: 200px; height: 24px; font-size: 15px; font-weight: bold; color: #334155; text-align: center;">Technical Lead</p>
+
+  <div style="position: absolute; left: 1000px; top: 430px; width: 200px; height: 100px; background-color: #ffffff; border: 1px solid #dddddd; border-radius: 8px; border-top: 4px solid #64748b;"></div>
+  <p style="position: absolute; left: 1000px; top: 470px; width: 200px; height: 24px; font-size: 15px; font-weight: bold; color: #334155; text-align: center;">Change Lead</p>
+</section>
+
+<!-- Slide 20: Timeline & ROI -->
+<section class="slide" style="background-color: #0f172a;">
+  <h2 style="position: absolute; left: 140px; top: 50px; width: 1000px; height: 60px; font-size: 46px; font-weight: bold; color: #ffffff; text-align: center;">2026 Implementation & Value</h2>
+
+  <!-- Timeline Bar -->
+  <div style="position: absolute; left: 140px; top: 150px; width: 166px; height: 80px; background-color: #94a3b8; border-radius: 8px 0 0 8px;"></div>
+  <p style="position: absolute; left: 140px; top: 180px; width: 166px; height: 24px; font-size: 14px; font-weight: bold; color: #ffffff; text-align: center;">Prep</p>
+
+  <div style="position: absolute; left: 306px; top: 150px; width: 250px; height: 80px; background-color: #3b82f6;"></div>
+  <p style="position: absolute; left: 306px; top: 180px; width: 250px; height: 24px; font-size: 14px; font-weight: bold; color: #ffffff; text-align: center;">Explore</p>
+
+  <div style="position: absolute; left: 556px; top: 150px; width: 333px; height: 80px; background-color: #2563eb;"></div>
+  <p style="position: absolute; left: 556px; top: 180px; width: 333px; height: 24px; font-size: 14px; font-weight: bold; color: #ffffff; text-align: center;">Realize</p>
+
+  <div style="position: absolute; left: 889px; top: 150px; width: 166px; height: 80px; background-color: #1e40af;"></div>
+  <p style="position: absolute; left: 889px; top: 180px; width: 166px; height: 24px; font-size: 14px; font-weight: bold; color: #ffffff; text-align: center;">Deploy</p>
+
+  <div style="position: absolute; left: 1055px; top: 150px; width: 85px; height: 80px; background-color: #22c55e; border-radius: 0 8px 8px 0;"></div>
+  <p style="position: absolute; left: 1055px; top: 180px; width: 85px; height: 24px; font-size: 14px; font-weight: bold; color: #ffffff; text-align: center;">Live</p>
+
+  <!-- Timeline Labels -->
+  <p style="position: absolute; left: 140px; top: 250px; width: 100px; height: 20px; font-size: 13px; color: #94a3b8;">Jan 2026</p>
+  <p style="position: absolute; left: 540px; top: 250px; width: 200px; height: 20px; font-size: 13px; color: #94a3b8; text-align: center;">Jun 2026</p>
+  <p style="position: absolute; left: 1040px; top: 250px; width: 100px; height: 20px; font-size: 13px; color: #94a3b8; text-align: right;">Jan 2027</p>
+
+  <!-- ROI Cards -->
+  <div style="position: absolute; left: 140px; top: 320px; width: 300px; height: 240px; background-color: #1e293b; border: 1px solid #334155; border-radius: 16px;"></div>
+  <p style="position: absolute; left: 140px; top: 380px; width: 300px; height: 70px; font-size: 56px; font-weight: bold; color: #4ade80; text-align: center;">2.5</p>
+  <p style="position: absolute; left: 140px; top: 450px; width: 300px; height: 24px; font-size: 18px; color: #94a3b8; text-align: center;">Years</p>
+  <p style="position: absolute; left: 140px; top: 490px; width: 300px; height: 24px; font-size: 15px; color: #ffffff; text-align: center;">Payback Period</p>
+
+  <div style="position: absolute; left: 490px; top: 320px; width: 300px; height: 240px; background-color: #1e293b; border: 1px solid #334155; border-radius: 16px;"></div>
+  <p style="position: absolute; left: 490px; top: 380px; width: 300px; height: 70px; font-size: 56px; font-weight: bold; color: #fb923c; text-align: center;">-15%</p>
+  <p style="position: absolute; left: 490px; top: 450px; width: 300px; height: 24px; font-size: 18px; color: #94a3b8; text-align: center;">Cost</p>
+  <p style="position: absolute; left: 490px; top: 490px; width: 300px; height: 24px; font-size: 15px; color: #ffffff; text-align: center;">Inventory Holding</p>
+
+  <div style="position: absolute; left: 840px; top: 320px; width: 300px; height: 240px; background-color: #1e293b; border: 1px solid #334155; border-radius: 16px;"></div>
+  <p style="position: absolute; left: 840px; top: 380px; width: 300px; height: 70px; font-size: 56px; font-weight: bold; color: #60a5fa; text-align: center;">-40%</p>
+  <p style="position: absolute; left: 840px; top: 450px; width: 300px; height: 24px; font-size: 18px; color: #94a3b8; text-align: center;">Man-hours</p>
+  <p style="position: absolute; left: 840px; top: 490px; width: 300px; height: 24px; font-size: 15px; color: #ffffff; text-align: center;">Admin Efficiency</p>
+
+  <p style="position: absolute; left: 440px; top: 620px; width: 400px; height: 30px; font-size: 18px; color: #94a3b8; text-align: center;">Let's Build the Future</p>
+</section>
+
+</body>
+</html>
