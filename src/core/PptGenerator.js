@@ -247,23 +247,18 @@ export class PptGenerator {
     const textStyles = this.styleConverter.convertTextStyles(element.styles);
     const shapeStyles = this.styleConverter.convertShapeStyles(element.styles);
 
-    // 获取字体大小（已经过缩放）
+    // 获取字体大小（不应用缩放，保持原始大小）
     let fontSize = textStyles.fontSize || this.options.defaultFontSize;
 
-    // 根据标题级别调整字号（标题使用固定大小，也应用缩放）
+    // 根据标题级别调整字号（标题使用固定大小）
     if (element.type === 'heading') {
       const level = parseInt(element.tagName?.replace('h', '') || '1');
       const headingSizes = { 1: 44, 2: 36, 3: 28, 4: 24, 5: 20, 6: 18 };
-      let baseSize = headingSizes[level] || 24;
-      // 应用缩放，但保持最小可读性
-      if (this.scale && this.scale !== 1) {
-        baseSize = Math.max(14, baseSize * this.scale);
-      }
-      fontSize = baseSize;
+      fontSize = headingSizes[level] || 24;
     }
 
     // 确保字体大小在合理范围内
-    fontSize = Math.max(8, Math.min(fontSize, 72));
+    fontSize = Math.max(8, Math.min(fontSize, 96));
 
     // 计算合适的文本宽度
     let textWidth = position.w;
@@ -688,14 +683,12 @@ export class PptGenerator {
 
       // 处理填充 - 区分渐变和纯色
       if (shapeStyles.fill) {
-        if (shapeStyles.fill.type === 'linear' && shapeStyles.fill.stops) {
-          // 渐变填充
-          shapeOptions.fill = {
-            type: 'solid',  // PptxGenJS 不直接支持渐变，使用第一个颜色
-            color: shapeStyles.fill.stops[0]?.color || '1e3a5f'
-          };
-          // 注意：PptxGenJS 对形状的渐变支持有限
-          // 可以尝试使用 fill.type = 'gradient' 但可能不稳定
+        if (shapeStyles.fill.type === 'linear' && shapeStyles.fill.stops && shapeStyles.fill.stops.length >= 2) {
+          // 渐变填充 - PptxGenJS 不直接支持形状渐变
+          // 使用渐变的结束色作为近似（通常更深的颜色）
+          const stops = shapeStyles.fill.stops;
+          const endColor = stops[stops.length - 1]?.color || '334155';
+          shapeOptions.fill = { color: endColor };
         } else {
           shapeOptions.fill = shapeStyles.fill;
         }

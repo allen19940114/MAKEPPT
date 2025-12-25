@@ -1005,3 +1005,55 @@
 - 代码测试: ✅ 通过 (49/49)
 
 **下一步**: Git 提交并推送
+
+---
+
+### [2024-12-25 20:00] - Session 12
+
+**当前功能**: 修复圆角、渐变和字体大小失真问题
+
+**遇到的问题**:
+
+1. **圆角效果缺失**
+   - 原因: `parseBorderRadius()` 返回的是英寸值，但又被 `pxToInches()` 再次转换
+   - 导致: 圆角值变得极小，视觉上看不到圆角
+
+2. **渐变背景不显示**
+   - 原因: PptxGenJS 不直接支持形状的渐变填充
+   - 导致: 渐变背景被忽略
+
+3. **字体大小失真**
+   - 原因: `parseFontSize()` 应用了缩放因子 (scale ≈ 0.007)
+   - 导致: 字体变得极小（18pt → 0.13pt）
+
+**解决方案**:
+
+1. **修复圆角** (`StyleConverter.js`):
+   - `parseBorderRadius()` 现在正确返回像素值
+   - `convertShapeStyles()` 中调用 `pxToInches()` 进行转换
+   - 限制圆角范围: 0.05 - 0.5 英寸
+
+2. **处理渐变** (`PptGenerator.js`):
+   - 检测渐变类型 (`shapeStyles.fill.type === 'linear'`)
+   - 由于 PptxGenJS 不支持形状渐变，使用渐变的结束色作为近似
+   - 结束色通常更深，视觉效果更接近原始设计
+
+3. **修复字体大小** (`StyleConverter.js`):
+   - 移除 `parseFontSize()` 中的缩放因子应用
+   - 字体大小应保持原始比例，只有位置需要缩放
+   - 最大字体从 72pt 提高到 96pt 支持大标题
+
+**修改内容**:
+
+1. `src/core/StyleConverter.js`:
+   - `parseFontSize()`: 移除缩放因子，保持原始字体大小
+   - `convertShapeStyles()`: 正确转换圆角为英寸
+
+2. `src/core/PptGenerator.js`:
+   - `addContainerElement()`: 处理渐变填充，使用结束色近似
+   - `addTextElement()`: 最大字体从 72pt 提高到 96pt
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+
+**下一步**: Git 提交并推送

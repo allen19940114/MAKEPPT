@@ -80,7 +80,7 @@ export class StyleConverter {
    * @param {string} fontSize - CSS 字体大小
    * @returns {number} 点值
    */
-  parseFontSize(fontSize, applyScale = true) {
+  parseFontSize(fontSize) {
     if (!fontSize) return 18; // 默认 18pt
 
     const value = parseFloat(fontSize);
@@ -98,14 +98,12 @@ export class StyleConverter {
       points = value || 18;
     }
 
-    // 应用缩放因子（如果需要）
-    if (applyScale && this.scale && this.scale !== 1) {
-      points = points * this.scale;
-    }
+    // 不应用缩放因子！字体大小应保持原始比例
+    // 位置和尺寸需要缩放，但字体大小不需要
 
     // 确保字体大小在合理范围内
-    // 最小 8pt 保证可读性，最大 72pt 避免过大
-    return Math.max(8, Math.min(points, 72));
+    // 最小 8pt 保证可读性，最大 96pt 支持大标题
+    return Math.max(8, Math.min(points, 96));
   }
 
   /**
@@ -417,10 +415,10 @@ export class StyleConverter {
     // 圆角 - 转换为英寸单位（PptxGenJS 需要英寸）
     const radius = this.parseBorderRadius(styles.borderRadius);
     if (radius > 0) {
-      // radius 是像素值，转换为英寸，并应用缩放
+      // radius 是像素值，转换为英寸
       const radiusInches = this.pxToInches(radius);
-      // 限制最大圆角为 0.5 英寸
-      config.rectRadius = Math.min(radiusInches * (this.scale || 1), 0.5);
+      // 限制圆角范围：最小 0.05 英寸，最大 0.5 英寸
+      config.rectRadius = Math.max(0.05, Math.min(radiusInches, 0.5));
     }
 
     // 透明度
