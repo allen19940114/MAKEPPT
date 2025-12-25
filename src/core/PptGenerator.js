@@ -276,29 +276,20 @@ export class PptGenerator {
     }
 
     // 每个字符的平均宽度（英寸）- 基于字号
-    // 使用更准确的系数：0.65 适合中英文混合场景
-    const avgCharWidthInches = fontSize / 72 * 0.65;
+    // 使用更准确的系数：0.6 适合中英文混合场景
+    const avgCharWidthInches = fontSize / 72 * 0.6;
 
-    // 如果宽度太小或为0，根据文本内容估算合适的宽度
+    // 只有当宽度太小或为0时，才根据文本内容估算宽度
+    // 否则尊重 HTML 原始宽度，让文本自然换行
     if (textWidth <= 0.5) {
-      // 估算文本需要的宽度，增加 10% 余量防止换行
-      const estimatedWidth = effectiveLength * avgCharWidthInches * 1.1;
-      // 使用幻灯片宽度的 90% 作为最大宽度
-      const maxWidth = this.options.slideWidth * 0.9;
+      // 估算文本需要的宽度
+      const estimatedWidth = effectiveLength * avgCharWidthInches;
+      // 使用幻灯片宽度的 80% 作为最大宽度，这样长文本会换行
+      const maxWidth = this.options.slideWidth * 0.8;
       textWidth = Math.min(estimatedWidth, maxWidth);
-      textWidth = Math.max(textWidth, 2); // 最小宽度 2 英寸
-    } else {
-      // 即使有宽度，也要检查是否足够容纳文本
-      const requiredWidth = effectiveLength * avgCharWidthInches * 1.1;
-      if (textWidth < requiredWidth && requiredWidth < this.options.slideWidth * 0.9) {
-        textWidth = requiredWidth;
-      }
+      textWidth = Math.max(textWidth, 1.5); // 最小宽度 1.5 英寸
     }
-
-    // 如果文本很长，确保宽度足够大以便换行
-    if (effectiveLength > 30 && textWidth < 5) {
-      textWidth = Math.min(this.options.slideWidth * 0.85, 10);
-    }
+    // 注意：如果 HTML 提供了宽度，就使用它，让文本在该宽度内换行
 
     // 确保高度合理 - 基于字号和文本行数估算
     const lineHeight = (fontSize / 72) * 1.5; // 行高约 1.5 倍字号

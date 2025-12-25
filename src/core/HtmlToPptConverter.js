@@ -415,8 +415,15 @@ export class HtmlToPptConverter {
       if (doc.fonts && doc.fonts.ready) {
         await doc.fonts.ready;
 
-        // 额外等待一小段时间确保字体完全可用
-        await new Promise(r => setTimeout(r, 100));
+        // 尝试加载特定字体
+        try {
+          await doc.fonts.load(`${fontSize}px "${cleanFontFamily}"`);
+        } catch (e) {
+          // 忽略字体加载错误
+        }
+
+        // 额外等待确保字体完全可用
+        await new Promise(r => setTimeout(r, 200));
       }
 
       // 创建 Canvas
@@ -441,31 +448,25 @@ export class HtmlToPptConverter {
       // 绘制文字
       ctx.fillText(iconText, width / 2, height / 2);
 
-      // 检查是否成功渲染（不是空白或方块）
+      // 检查是否成功渲染（只要有内容就认为成功）
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
       let hasContent = false;
-      let hasVariety = false;
       let pixelCount = 0;
-      let lastAlpha = 0;
 
-      // 检查是否有实际内容（不是全透明，也不是简单的方块）
+      // 检查是否有实际内容（不是全透明）
       for (let i = 0; i < data.length; i += 4) {
         const alpha = data[i + 3];
-        if (alpha > 10) {
+        if (alpha > 5) {
           hasContent = true;
           pixelCount++;
-          if (lastAlpha > 0 && Math.abs(alpha - lastAlpha) > 20) {
-            hasVariety = true;
-          }
-          lastAlpha = alpha;
         }
       }
 
-      // 如果像素太少或没有变化，可能是渲染失败（显示为方块或空白）
-      const minPixels = (width * height * scale * scale) * 0.01; // 至少1%的像素
+      // 降低检查门槛：只要有一些像素就认为成功
+      const minPixels = 10; // 最少10个像素
       if (!hasContent || pixelCount < minPixels) {
-        console.warn(`Canvas render may have failed for "${iconText}" (pixels: ${pixelCount})`);
+        console.warn(`Canvas render failed for "${iconText}" (pixels: ${pixelCount})`);
         return null;
       }
 
