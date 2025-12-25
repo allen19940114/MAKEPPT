@@ -271,20 +271,24 @@ export class PptGenerator {
     }
 
     // 每个字符的平均宽度（英寸）- 基于字号
-    // 使用更准确的系数：0.6 适合中英文混合场景
-    const avgCharWidthInches = fontSize / 72 * 0.6;
+    // 使用更大的系数：0.7 以减少不必要的换行
+    const avgCharWidthInches = fontSize / 72 * 0.7;
 
-    // 只有当宽度太小或为0时，才根据文本内容估算宽度
-    // 否则尊重 HTML 原始宽度，让文本自然换行
+    // 估算文本需要的宽度
+    const estimatedWidth = effectiveLength * avgCharWidthInches;
+
     if (textWidth <= 0.5) {
-      // 估算文本需要的宽度
-      const estimatedWidth = effectiveLength * avgCharWidthInches;
-      // 使用幻灯片宽度的 80% 作为最大宽度，这样长文本会换行
+      // 宽度太小或为0时，根据文本内容估算宽度
       const maxWidth = this.options.slideWidth * 0.8;
       textWidth = Math.min(estimatedWidth, maxWidth);
       textWidth = Math.max(textWidth, 1.5); // 最小宽度 1.5 英寸
+    } else if (estimatedWidth > textWidth && effectiveLength <= 30) {
+      // 对于短文本（<=30字符），如果估算宽度大于HTML宽度，适当扩展
+      // 这解决了小标题被过度换行的问题
+      const expandedWidth = Math.min(estimatedWidth * 1.1, this.options.slideWidth * 0.9);
+      textWidth = Math.max(textWidth, expandedWidth);
     }
-    // 注意：如果 HTML 提供了宽度，就使用它，让文本在该宽度内换行
+    // 对于长文本，尊重 HTML 原始宽度，让文本自然换行
 
     // 确保高度合理 - 基于字号和文本行数估算
     const lineHeight = (fontSize / 72) * 1.5; // 行高约 1.5 倍字号
@@ -724,13 +728,12 @@ export class PptGenerator {
       const radiusPx = this.styleConverter.parseBorderRadius(element.styles.borderRadius);
 
       if (radiusPx > 0) {
-        // 检查是否为圆形：正方形 + 圆角 >= 短边的 45%（接近 50%）
         const width = element.position?.width || 0;
         const height = element.position?.height || 0;
         const shortSidePx = Math.min(width, height);
         const isSquare = Math.abs(width - height) < 2; // 允许 2px 误差
-        // 更严格的圆形判断：圆角必须达到短边的 45% 以上
-        const isFullRadius = shortSidePx > 0 && radiusPx >= shortSidePx * 0.45;
+        // 非常严格的圆形判断：圆角必须达到短边的 48% 以上（几乎是 50%）
+        const isFullRadius = shortSidePx > 0 && radiusPx >= shortSidePx * 0.48;
 
         if (isSquare && isFullRadius) {
           // 正方形 + 大圆角 = 圆形
@@ -738,11 +741,12 @@ export class PptGenerator {
         } else {
           // 有圆角使用 roundRect
           shapeType = 'roundRect';
-          // rectRadius 在 PptxGenJS 中是 0-1 之间的比例值
-          // 计算圆角比例：圆角像素 / 较短边像素的一半
-          const radiusRatio = shortSidePx > 0 ? Math.min(radiusPx / (shortSidePx / 2), 1) : 0.1;
-          // 最小圆角比例 0.01，最大 0.5（避免变成类圆形）
-          shapeOptions.rectRadius = Math.max(0.01, Math.min(radiusRatio, 0.5));
+          // PptxGenJS 的 rectRadius 会被内部放大，需要缩小输入值
+          // 实际测试：输入 0.4 会输出 57.6%，所以需要除以约 1.44 的系数
+          // 公式：radiusPx / shortSidePx 给出的是相对于整个短边的比例
+          const radiusRatio = shortSidePx > 0 ? radiusPx / shortSidePx : 0.1;
+          // 除以 1.44 修正 PptxGenJS 的放大效应，限制在 0.01-0.35 之间
+          shapeOptions.rectRadius = Math.max(0.01, Math.min(radiusRatio / 1.44, 0.35));
         }
       }
 
@@ -769,7 +773,8 @@ export class PptGenerator {
       const heightPx = element.position?.height || 0;
       const shortSidePx = Math.min(widthPx, heightPx);
       const isSquare = Math.abs(widthPx - heightPx) < 2;
-      const isFullRadius = shortSidePx > 0 && radiusPx >= shortSidePx * 0.45;
+      // 非常严格的圆形判断：圆角必须达到短边的 48% 以上
+      const isFullRadius = shortSidePx > 0 && radiusPx >= shortSidePx * 0.48;
 
       if (isSquare && isFullRadius) {
         // 正方形 + 大圆角 = 圆形
@@ -777,9 +782,9 @@ export class PptGenerator {
       } else {
         // 有圆角使用 roundRect
         shapeType = 'roundRect';
-        // 计算圆角比例：圆角像素 / 较短边像素的一半
-        const radiusRatio = shortSidePx > 0 ? Math.min(radiusPx / (shortSidePx / 2), 1) : 0.1;
-        shapeStyles.rectRadius = Math.max(0.01, Math.min(radiusRatio, 0.5));
+        // PptxGenJS 的 rectRadius 会被内部放大，需要缩小输入值
+        const radiusRatio = shortSidePx > 0 ? radiusPx / shortSidePx : 0.1;
+        shapeStyles.rectRadius = Math.max(0.01, Math.min(radiusRatio / 1.44, 0.35));
       }
     }
 
