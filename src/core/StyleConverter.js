@@ -25,21 +25,36 @@ export class StyleConverter {
       'Helvetica Neue': 'Arial',
       '-apple-system': 'Arial',
       'BlinkMacSystemFont': 'Arial',
-      'Segoe UI': 'Arial',
+      'Segoe UI': 'Segoe UI',
       'Roboto': 'Arial',
+      'Open Sans': 'Arial',
+      'Lato': 'Arial',
+      'Montserrat': 'Arial',
+      'Poppins': 'Arial',
+      'Inter': 'Arial',
+      'Nunito': 'Arial',
       'sans-serif': 'Arial',
+      'system-ui': 'Arial',
+      'ui-sans-serif': 'Arial',
       // 衬线字体 (Serif)
       'Times New Roman': 'Times New Roman',
       'Times': 'Times New Roman',
       'Georgia': 'Georgia',
+      'Playfair Display': 'Georgia',
+      'Merriweather': 'Georgia',
       'serif': 'Times New Roman',
+      'ui-serif': 'Times New Roman',
       // 等宽字体 (Monospace)
       'Verdana': 'Verdana',
       'Courier New': 'Courier New',
       'Courier': 'Courier New',
       'monospace': 'Courier New',
-      'Consolas': 'Courier New',
+      'Consolas': 'Consolas',
       'Monaco': 'Courier New',
+      'Fira Code': 'Consolas',
+      'JetBrains Mono': 'Consolas',
+      'Source Code Pro': 'Consolas',
+      'ui-monospace': 'Consolas',
       // 中文字体 - 映射到通用中文字体
       'Microsoft YaHei': 'Microsoft YaHei',
       '微软雅黑': 'Microsoft YaHei',
@@ -51,7 +66,15 @@ export class StyleConverter {
       'Hiragino Sans GB': 'Hiragino Sans GB',
       'STHeiti': 'SimHei',
       'Noto Sans SC': 'Microsoft YaHei',
-      'Source Han Sans SC': 'Microsoft YaHei'
+      'Source Han Sans SC': 'Microsoft YaHei',
+      'WenQuanYi Micro Hei': 'Microsoft YaHei',
+      // 日文字体
+      'Hiragino Kaku Gothic ProN': 'Yu Gothic',
+      'Meiryo': 'Meiryo',
+      'MS Gothic': 'MS Gothic',
+      // 韩文字体
+      'Malgun Gothic': 'Malgun Gothic',
+      'Nanum Gothic': 'Malgun Gothic'
     };
   }
 
@@ -217,6 +240,115 @@ export class StyleConverter {
   }
 
   /**
+   * 解析垂直对齐
+   * @param {string} verticalAlign - CSS 垂直对齐
+   * @param {string} alignItems - CSS flex align-items
+   * @returns {string} PPT 垂直对齐值
+   */
+  parseVerticalAlign(verticalAlign, alignItems) {
+    // 先检查 flexbox 的 align-items
+    if (alignItems) {
+      const flexAlignMap = {
+        'flex-start': 'top',
+        'start': 'top',
+        'flex-end': 'bottom',
+        'end': 'bottom',
+        'center': 'middle',
+        'baseline': 'top',
+        'stretch': 'top'
+      };
+      if (flexAlignMap[alignItems]) {
+        return flexAlignMap[alignItems];
+      }
+    }
+
+    // 检查 vertical-align
+    if (verticalAlign) {
+      const valignMap = {
+        'top': 'top',
+        'middle': 'middle',
+        'bottom': 'bottom',
+        'baseline': 'top',
+        'text-top': 'top',
+        'text-bottom': 'bottom',
+        'sub': 'bottom',
+        'super': 'top'
+      };
+      if (valignMap[verticalAlign]) {
+        return valignMap[verticalAlign];
+      }
+    }
+
+    return 'top'; // 默认顶部对齐
+  }
+
+  /**
+   * 解析行高
+   * @param {string} lineHeight - CSS 行高
+   * @param {number} fontSize - 字体大小 (点)
+   * @returns {number} PPT 行间距 (倍数)
+   */
+  parseLineHeight(lineHeight, fontSize = 18) {
+    if (!lineHeight || lineHeight === 'normal') {
+      return 1.2; // 默认行高
+    }
+
+    const value = parseFloat(lineHeight);
+    if (isNaN(value)) return 1.2;
+
+    // 无单位数字 (如 1.5)
+    if (!lineHeight.includes('px') && !lineHeight.includes('em') &&
+        !lineHeight.includes('rem') && !lineHeight.includes('%')) {
+      return Math.max(0.8, Math.min(value, 3)); // 限制在 0.8-3 倍之间
+    }
+
+    // 百分比 (如 150%)
+    if (lineHeight.includes('%')) {
+      return Math.max(0.8, Math.min(value / 100, 3));
+    }
+
+    // 像素值 (如 24px) - 转换为相对字号的倍数
+    if (lineHeight.includes('px')) {
+      const lineHeightPt = this.pxToPoints(value);
+      const ratio = lineHeightPt / fontSize;
+      return Math.max(0.8, Math.min(ratio, 3));
+    }
+
+    // em/rem (如 1.5em)
+    if (lineHeight.includes('em') || lineHeight.includes('rem')) {
+      return Math.max(0.8, Math.min(value, 3));
+    }
+
+    return 1.2;
+  }
+
+  /**
+   * 解析字母间距
+   * @param {string} letterSpacing - CSS 字母间距
+   * @returns {number} PPT 字符间距 (点)
+   */
+  parseLetterSpacing(letterSpacing) {
+    if (!letterSpacing || letterSpacing === 'normal') {
+      return 0;
+    }
+
+    const value = parseFloat(letterSpacing);
+    if (isNaN(value)) return 0;
+
+    // 像素值转换为点
+    if (letterSpacing.includes('px')) {
+      return this.pxToPoints(value);
+    }
+
+    // em 值假设基于 16px 字号
+    if (letterSpacing.includes('em')) {
+      return value * 12; // 约等于 12pt
+    }
+
+    return value;
+  }
+
+  /**
    * 转换边框样式
    * @param {Object} styles - CSS 样式对象
    * @returns {Object} PPT 边框配置
@@ -364,17 +496,33 @@ export class StyleConverter {
    */
   convertTextStyles(styles) {
     const decoration = this.parseTextDecoration(styles.textDecoration);
+    const fontSize = this.parseFontSize(styles.fontSize);
+    const lineSpacing = this.parseLineHeight(styles.lineHeight, fontSize);
+    const charSpacing = this.parseLetterSpacing(styles.letterSpacing);
 
-    return {
+    const result = {
       fontFace: this.parseFontFamily(styles.fontFamily),
-      fontSize: this.parseFontSize(styles.fontSize),
+      fontSize: fontSize,
       color: this.convertColor(styles.color) || '000000',
       bold: this.isBold(styles.fontWeight),
       italic: this.isItalic(styles.fontStyle),
       underline: decoration.underline || false,
       strike: decoration.strike || false,
-      align: this.parseTextAlign(styles.textAlign)
+      align: this.parseTextAlign(styles.textAlign),
+      valign: this.parseVerticalAlign(styles.verticalAlign, styles.alignItems)
     };
+
+    // 只有当行高不是默认值时才设置 (避免不必要的样式覆盖)
+    if (lineSpacing !== 1.2) {
+      result.lineSpacing = lineSpacing;
+    }
+
+    // 只有当字符间距不为 0 时才设置
+    if (charSpacing !== 0) {
+      result.charSpacing = charSpacing;
+    }
+
+    return result;
   }
 
   /**

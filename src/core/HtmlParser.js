@@ -241,6 +241,13 @@ export class HtmlParser {
     if (tagName === 'img') {
       elementData.src = element.src || element.getAttribute('src');
       elementData.alt = element.alt;
+      // 提取图片原始尺寸（用于保持正确的宽高比）
+      elementData.naturalWidth = element.naturalWidth || 0;
+      elementData.naturalHeight = element.naturalHeight || 0;
+      // 提取 object-fit 和 object-position 样式
+      const imgStyle = window.getComputedStyle ? window.getComputedStyle(element) : element.style;
+      elementData.objectFit = imgStyle.objectFit || 'fill';
+      elementData.objectPosition = imgStyle.objectPosition || 'center center';
     } else if (tagName === 'a') {
       elementData.href = element.href;
     } else if (tagName === 'table') {
@@ -457,7 +464,16 @@ export class HtmlParser {
 
       // 动画
       animation: style.animation,
-      transition: style.transition
+      transition: style.transition,
+
+      // 图片相关样式
+      objectFit: style.objectFit,
+      objectPosition: style.objectPosition,
+
+      // Flexbox 相关
+      alignItems: style.alignItems,
+      justifyContent: style.justifyContent,
+      verticalAlign: style.verticalAlign
     };
   }
 

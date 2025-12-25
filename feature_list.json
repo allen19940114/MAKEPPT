@@ -208,6 +208,99 @@
         ],
         "browser_tests": []
       }
+    },
+    {
+      "id": "F013",
+      "name": "圆角精确控制",
+      "priority": 13,
+      "description": "修复圆角力度过大问题，确保圆角比例与HTML原始效果一致",
+      "implemented": true,
+      "implementation_notes": "移除了错误的 /1.44 校正因子，直接使用 radiusPx/shortSidePx 计算比例。圆形判断阈值从 48% 改为 50%",
+      "implemented_at": "2024-12-25",
+      "test_steps": {
+        "code_tests": [
+          { "id": "F013-C1", "description": "圆角比例计算正确", "passed": true },
+          { "id": "F013-C2", "description": "小圆角不会变成类圆形", "passed": true }
+        ],
+        "browser_tests": [
+          { "id": "F013-B1", "description": "PPT中圆角效果与HTML一致", "passed": true }
+        ]
+      }
+    },
+    {
+      "id": "F014",
+      "name": "渐变效果优化",
+      "priority": 14,
+      "description": "优化背景渐变和字体渐变的转换效果",
+      "implemented": true,
+      "implementation_notes": "使用 Canvas 渲染渐变为 PNG 图片，支持对角线方向（to bottom right/left 等），支持颜色位置百分比",
+      "implemented_at": "2024-12-25",
+      "test_steps": {
+        "code_tests": [
+          { "id": "F014-C1", "description": "背景渐变正确渲染为图片", "passed": true },
+          { "id": "F014-C2", "description": "字体渐变正确渲染为图片", "passed": true },
+          { "id": "F014-C3", "description": "渐变方向解析正确", "passed": true }
+        ],
+        "browser_tests": [
+          { "id": "F014-B1", "description": "渐变效果与HTML一致", "passed": true }
+        ]
+      }
+    },
+    {
+      "id": "F015",
+      "name": "文本框宽度优化",
+      "priority": 15,
+      "description": "修复文本框宽度计算问题，避免文本错误换行或溢出",
+      "implemented": true,
+      "implementation_notes": "改进中英文字符宽度计算：中文计为2单位，英文计为1单位；根据中英文比例调整 avgCharWidthFactor；尊重 HTML 原始宽度，让长文本自然换行",
+      "implemented_at": "2024-12-25",
+      "test_steps": {
+        "code_tests": [
+          { "id": "F015-C1", "description": "中英文字符宽度计算正确", "passed": true },
+          { "id": "F015-C2", "description": "文本框尺寸与HTML一致", "passed": true }
+        ],
+        "browser_tests": [
+          { "id": "F015-B1", "description": "文本不会意外换行", "passed": true }
+        ]
+      }
+    },
+    {
+      "id": "F016",
+      "name": "字体排版一致性",
+      "priority": 16,
+      "description": "确保字体、字号、行高、对齐方式与HTML原始效果一致",
+      "implemented": true,
+      "implementation_notes": "扩展 fontMap 支持现代 Web 字体（Inter, Poppins, Montserrat 等）和日韩字体；新增 parseVerticalAlign, parseLineHeight, parseLetterSpacing 方法；PptGenerator 应用 lineSpacingMultiple 和 charSpacing",
+      "implemented_at": "2024-12-25",
+      "test_steps": {
+        "code_tests": [
+          { "id": "F016-C1", "description": "字体映射正确", "passed": true },
+          { "id": "F016-C2", "description": "字号转换准确", "passed": true },
+          { "id": "F016-C3", "description": "行高和对齐正确", "passed": true }
+        ],
+        "browser_tests": [
+          { "id": "F016-B1", "description": "PPT排版与HTML一致", "passed": true }
+        ]
+      }
+    },
+    {
+      "id": "F017",
+      "name": "图片配图一致性",
+      "priority": 17,
+      "description": "确保图片位置、尺寸、裁剪与HTML原始效果一致",
+      "implemented": true,
+      "implementation_notes": "HtmlParser 提取 naturalWidth/naturalHeight 和 objectFit/objectPosition；PptGenerator.addImageElement 支持 object-fit 的 contain/cover/fill/scale-down 模式，正确计算居中偏移",
+      "implemented_at": "2024-12-25",
+      "test_steps": {
+        "code_tests": [
+          { "id": "F017-C1", "description": "图片位置计算正确", "passed": true },
+          { "id": "F017-C2", "description": "图片尺寸保持比例", "passed": true },
+          { "id": "F017-C3", "description": "支持object-fit裁剪", "passed": true }
+        ],
+        "browser_tests": [
+          { "id": "F017-B1", "description": "图片效果与HTML一致", "passed": true }
+        ]
+      }
     }
   ]
 }

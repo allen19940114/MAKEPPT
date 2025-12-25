@@ -1604,3 +1604,88 @@
 ```
 
 **下一步**: 提交代码并推送到远程仓库
+
+---
+
+### [2024-12-25 14:30] - Session 23
+
+**当前功能**: F013 圆角精确控制 + 添加新功能定义
+
+**修改内容**:
+
+1. **feature_list.json**:
+   - 添加 F013: 圆角精确控制
+   - 添加 F014: 渐变效果优化
+   - 添加 F015: 文本框宽度优化
+   - 添加 F016: 字体排版一致性
+   - 添加 F017: 图片配图一致性
+
+2. **src/core/PptGenerator.js**:
+   - `addContainerElement()`: 优化圆角计算
+     - 移除错误的 `/1.44` 校正系数
+     - 使用 `radiusPx / shortSidePx` 直接计算比例
+     - 限制范围改为 0.01-0.5
+   - `addShapeElement()`: 同步优化圆角计算
+   - 圆形判断阈值从 48% 改为 50%（更符合 CSS 规范）
+
+**技术说明**:
+- CSS `border-radius: 10px` 在 100px 高度的矩形上 = 10% 圆角
+- PptxGenJS `rectRadius: 0.1` 表示圆角占短边的 10%
+- 之前的 `/1.44` 系数导致圆角被过度缩小
+- 新公式：`rectRadius = radiusPx / shortSidePx`
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- E2E 测试: ✅ 通过
+  - 圆角值: 28.8%（从 57.6% 降低，更接近实际效果）
+  - roundRect: 1
+  - ellipse: 1
+  - 渐变图片: 1
+
+**下一步**: 实现 F014 渐变效果优化
+
+---
+
+### [2024-12-25 15:00] - Session 24
+
+**当前功能**: F016 字体排版一致性 + F017 图片配图一致性
+
+**修改内容**:
+
+1. **src/core/StyleConverter.js** (F016):
+   - 扩展 `fontMap` 添加现代 Web 字体映射
+     - Sans-serif: Open Sans, Lato, Montserrat, Poppins, Inter, Nunito
+     - Code: Fira Code, JetBrains Mono, Source Code Pro
+     - System UI: system-ui, ui-sans-serif, ui-serif, ui-monospace
+     - 日韩字体: Hiragino Kaku Gothic ProN, Meiryo, Malgun Gothic
+   - 新增 `parseVerticalAlign()`: 解析 CSS 垂直对齐和 flex align-items
+   - 新增 `parseLineHeight()`: 解析行高（支持 px, em, rem, %）
+   - 新增 `parseLetterSpacing()`: 解析字符间距
+   - 更新 `convertTextStyles()`: 返回 lineSpacing 和 charSpacing
+
+2. **src/core/PptGenerator.js** (F016):
+   - `addTextElement()`: 应用 `valign`, `lineSpacingMultiple`, `charSpacing`
+
+3. **src/core/HtmlParser.js** (F017):
+   - `extractComputedStyles()`: 添加 `objectFit`, `objectPosition`, `alignItems`, `justifyContent`, `verticalAlign`
+   - `parseElement()`: 为 img 元素提取 `naturalWidth`, `naturalHeight`, `objectFit`, `objectPosition`
+
+4. **src/core/PptGenerator.js** (F017):
+   - `addImageElement()`: 支持 object-fit 的 contain/cover/fill/scale-down 模式
+     - 根据图片原始尺寸和容器尺寸计算正确的宽高比
+     - 实现居中偏移计算
+   - 新增 `mapObjectFitToSizing()`: CSS object-fit 到 PptxGenJS sizing type 映射
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- E2E 测试: ✅ 通过 (5/5)
+
+**feature_list.json 更新**:
+- F013 圆角精确控制: ✅ 已完成
+- F014 渐变效果优化: ✅ 已完成
+- F015 文本框宽度优化: ✅ 已完成
+- F016 字体排版一致性: ✅ 已完成
+- F017 图片配图一致性: ✅ 已完成
+
+**下一步**: Git 提交并推送
+

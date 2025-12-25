@@ -280,29 +280,44 @@ export class PptGenerator {
     let textWidth = position.w;
     let textHeight = position.h;
 
+    // 保存原始 HTML 宽度用于参考
+    const originalHtmlWidth = element.position?.width || 0;
+
     // 计算文本的有效字符长度（考虑中英文）
     let effectiveLength = 0;
+    let chineseCount = 0;
+    let englishCount = 0;
     for (const char of text) {
-      effectiveLength += char.charCodeAt(0) > 127 ? 2 : 1;
+      if (char.charCodeAt(0) > 127) {
+        effectiveLength += 2;
+        chineseCount++;
+      } else {
+        effectiveLength += 1;
+        englishCount++;
+      }
     }
 
-    // 每个字符的平均宽度（英寸）- 基于字号
-    // 使用更大的系数：0.7 以减少不必要的换行
-    const avgCharWidthInches = fontSize / 72 * 0.7;
+    // 计算中英文比例，调整字符宽度系数
+    const chineseRatio = text.length > 0 ? chineseCount / text.length : 0;
+    // 中文字符平均宽度约为英文的 1.8 倍
+    const avgCharWidthFactor = 0.55 + chineseRatio * 0.25;
+    const avgCharWidthInches = fontSize / 72 * avgCharWidthFactor;
 
-    // 估算文本需要的宽度
-    const estimatedWidth = effectiveLength * avgCharWidthInches;
+    // 估算文本需要的宽度（增加 5% 安全余量）
+    const estimatedWidth = effectiveLength * avgCharWidthInches * 1.05;
 
     if (textWidth <= 0.5) {
       // 宽度太小或为0时，根据文本内容估算宽度
-      const maxWidth = this.options.slideWidth * 0.8;
+      const maxWidth = this.options.slideWidth * 0.85;
       textWidth = Math.min(estimatedWidth, maxWidth);
-      textWidth = Math.max(textWidth, 1.5); // 最小宽度 1.5 英寸
-    } else if (estimatedWidth > textWidth && effectiveLength <= 30) {
-      // 对于短文本（<=30字符），如果估算宽度大于HTML宽度，适当扩展
-      // 这解决了小标题被过度换行的问题
-      const expandedWidth = Math.min(estimatedWidth * 1.1, this.options.slideWidth * 0.9);
-      textWidth = Math.max(textWidth, expandedWidth);
+      textWidth = Math.max(textWidth, 1.0); // 最小宽度 1.0 英寸
+    } else if (originalHtmlWidth > 0) {
+      // 有原始 HTML 宽度时，使用它但确保足够容纳文本
+      // 如果估算宽度明显大于当前宽度，且是短文本，适当扩展
+      if (estimatedWidth > textWidth * 1.1 && effectiveLength <= 40) {
+        const expandedWidth = Math.min(estimatedWidth, this.options.slideWidth * 0.9);
+        textWidth = Math.max(textWidth, expandedWidth);
+      }
     }
     // 对于长文本，尊重 HTML 原始宽度，让文本自然换行
 
@@ -310,8 +325,8 @@ export class PptGenerator {
     const lineHeight = (fontSize / 72) * 1.5; // 行高约 1.5 倍字号
     if (textHeight <= 0.3) {
       // 估算行数
-      const charsPerLine = Math.floor(textWidth / avgCharWidthInches);
-      const estimatedLines = Math.ceil(effectiveLength / Math.max(charsPerLine, 15));
+      const charsPerLine = Math.max(Math.floor(textWidth / avgCharWidthInches), 10);
+      const estimatedLines = Math.ceil(effectiveLength / charsPerLine);
       textHeight = lineHeight * Math.max(estimatedLines, 1);
       textHeight = Math.max(textHeight, lineHeight); // 至少一行高度
       textHeight = Math.min(textHeight, this.options.slideHeight * 0.6); // 最大高度限制
@@ -331,11 +346,21 @@ export class PptGenerator {
       underline: textStyles.underline || false,
       strike: textStyles.strike || false,
       align: textStyles.align || 'left',
-      valign: 'top',
+      valign: textStyles.valign || 'top',
       wrap: true,
       breakLine: true,
       isTextBox: true
     };
+
+    // 应用行间距 (PptxGenJS 使用 lineSpacingMultiple)
+    if (textStyles.lineSpacing && textStyles.lineSpacing !== 1.2) {
+      textOptions.lineSpacingMultiple = textStyles.lineSpacing;
+    }
+
+    // 应用字符间距 (PptxGenJS 使用 charSpacing，单位为点)
+    if (textStyles.charSpacing && textStyles.charSpacing !== 0) {
+      textOptions.charSpacing = textStyles.charSpacing;
+    }
 
     // 只在确实有明确背景色时才添加填充（排除透明和白色背景）
     if (shapeStyles.fill && shapeStyles.fill.color) {
@@ -551,20 +576,82 @@ export class PptGenerator {
     const position = this.calculatePosition(element.position);
 
     // 确保图片有合理的尺寸
-    const imgW = position.w > 0.5 ? position.w : 3;
-    const imgH = position.h > 0.5 ? position.h : 2;
+    let imgW = position.w > 0.5 ? position.w : 3;
+    let imgH = position.h > 0.5 ? position.h : 2;
+
+    // 获取 object-fit 样式，映射到 PptxGenJS 的 sizing type
+    const objectFit = element.objectFit || 'fill';
+    const sizingType = this.mapObjectFitToSizing(objectFit);
+
+    // 如果有图片原始尺寸，可以更精确地计算
+    const naturalW = element.naturalWidth || 0;
+    const naturalH = element.naturalHeight || 0;
+
+    // 处理不同的 object-fit 模式
+    let finalW = imgW;
+    let finalH = imgH;
+    let finalX = position.x;
+    let finalY = position.y;
+
+    if (naturalW > 0 && naturalH > 0 && objectFit !== 'fill') {
+      const aspectRatio = naturalW / naturalH;
+      const containerRatio = imgW / imgH;
+
+      if (objectFit === 'contain') {
+        // contain: 保持比例，完整显示图片，可能有留白
+        if (aspectRatio > containerRatio) {
+          // 图片更宽，以宽度为准
+          finalH = imgW / aspectRatio;
+          finalY = position.y + (imgH - finalH) / 2; // 垂直居中
+        } else {
+          // 图片更高，以高度为准
+          finalW = imgH * aspectRatio;
+          finalX = position.x + (imgW - finalW) / 2; // 水平居中
+        }
+      } else if (objectFit === 'cover') {
+        // cover: 保持比例，填满容器，可能裁剪
+        // PptxGenJS 的 cover 会自动处理，但我们需要确保尺寸正确
+        finalW = imgW;
+        finalH = imgH;
+      } else if (objectFit === 'scale-down') {
+        // scale-down: 取 none 和 contain 中较小的
+        if (naturalW <= imgW * this.containerSize.width / this.options.slideWidth &&
+            naturalH <= imgH * this.containerSize.height / this.options.slideHeight) {
+          // 图片比容器小，使用原始尺寸
+          const scaledW = this.styleConverter.pxToInches(naturalW) * this.scale;
+          const scaledH = this.styleConverter.pxToInches(naturalH) * this.scale;
+          finalW = Math.min(scaledW, imgW);
+          finalH = Math.min(scaledH, imgH);
+          finalX = position.x + (imgW - finalW) / 2;
+          finalY = position.y + (imgH - finalH) / 2;
+        } else {
+          // 图片比容器大，使用 contain 逻辑
+          if (aspectRatio > containerRatio) {
+            finalH = imgW / aspectRatio;
+            finalY = position.y + (imgH - finalH) / 2;
+          } else {
+            finalW = imgH * aspectRatio;
+            finalX = position.x + (imgW - finalW) / 2;
+          }
+        }
+      }
+    }
 
     const imageOptions = {
-      x: position.x,
-      y: position.y,
-      w: imgW,
-      h: imgH,
-      sizing: {
-        type: 'contain',
-        w: imgW,
-        h: imgH
-      }
+      x: finalX,
+      y: finalY,
+      w: finalW,
+      h: finalH
     };
+
+    // 添加 sizing 配置用于 PptxGenJS 内部处理
+    if (sizingType && sizingType !== 'stretch') {
+      imageOptions.sizing = {
+        type: sizingType,
+        w: finalW,
+        h: finalH
+      };
+    }
 
     // 判断图片类型
     if (element.src.startsWith('data:')) {
@@ -593,6 +680,22 @@ export class PptGenerator {
         console.warn('Failed to add image:', error);
       }
     }
+  }
+
+  /**
+   * 将 CSS object-fit 映射到 PptxGenJS sizing type
+   * @param {string} objectFit - CSS object-fit 值
+   * @returns {string} PptxGenJS sizing type
+   */
+  mapObjectFitToSizing(objectFit) {
+    const mapping = {
+      'fill': 'stretch',      // 拉伸填满（默认）
+      'contain': 'contain',   // 保持比例，完整显示
+      'cover': 'cover',       // 保持比例，填满裁剪
+      'none': 'stretch',      // 原始尺寸（PptxGenJS 不直接支持，用 stretch）
+      'scale-down': 'contain' // 取 none 和 contain 中较小的
+    };
+    return mapping[objectFit] || 'contain';
   }
 
   /**
@@ -749,21 +852,24 @@ export class PptGenerator {
         const height = element.position?.height || 0;
         const shortSidePx = Math.min(width, height);
         const isSquare = Math.abs(width - height) < 2; // 允许 2px 误差
-        // 非常严格的圆形判断：圆角必须达到短边的 48% 以上（几乎是 50%）
-        const isFullRadius = shortSidePx > 0 && radiusPx >= shortSidePx * 0.48;
+        // 圆形判断：圆角达到短边的 50%（border-radius >= 50%）
+        const isFullRadius = shortSidePx > 0 && radiusPx >= shortSidePx * 0.5;
 
         if (isSquare && isFullRadius) {
           // 正方形 + 大圆角 = 圆形
           shapeType = 'ellipse';
-        } else {
+        } else if (shortSidePx > 0) {
           // 有圆角使用 roundRect
           shapeType = 'roundRect';
-          // PptxGenJS 的 rectRadius 会被内部放大，需要缩小输入值
-          // 实际测试：输入 0.4 会输出 57.6%，所以需要除以约 1.44 的系数
-          // 公式：radiusPx / shortSidePx 给出的是相对于整个短边的比例
-          const radiusRatio = shortSidePx > 0 ? radiusPx / shortSidePx : 0.1;
-          // 除以 1.44 修正 PptxGenJS 的放大效应，限制在 0.01-0.35 之间
-          shapeOptions.rectRadius = Math.max(0.01, Math.min(radiusRatio / 1.44, 0.35));
+          // CSS border-radius 是绝对像素值，需要转换为 PptxGenJS 的比例值
+          // PptxGenJS rectRadius: 0 = 无圆角, 0.5 = 最大圆角（胶囊形状）
+          // CSS border-radius: 0 = 无圆角, shortSide/2 = 最大圆角
+          // 公式：rectRadius = (radiusPx / shortSidePx) * 2 * correction
+          // 但 PptxGenJS 内部会将此值转换为 "adj" 参数（约 100000 * rectRadius * 2）
+          // 实测校正：需要除以约 2 才能匹配 HTML 效果
+          const rawRatio = radiusPx / shortSidePx;
+          // 限制在 0.01-0.5 之间，确保不会过度圆润
+          shapeOptions.rectRadius = Math.max(0.01, Math.min(rawRatio, 0.5));
         }
       }
 
@@ -790,18 +896,18 @@ export class PptGenerator {
       const heightPx = element.position?.height || 0;
       const shortSidePx = Math.min(widthPx, heightPx);
       const isSquare = Math.abs(widthPx - heightPx) < 2;
-      // 非常严格的圆形判断：圆角必须达到短边的 48% 以上
-      const isFullRadius = shortSidePx > 0 && radiusPx >= shortSidePx * 0.48;
+      // 圆形判断：圆角达到短边的 50%
+      const isFullRadius = shortSidePx > 0 && radiusPx >= shortSidePx * 0.5;
 
       if (isSquare && isFullRadius) {
         // 正方形 + 大圆角 = 圆形
         shapeType = 'ellipse';
-      } else {
+      } else if (shortSidePx > 0) {
         // 有圆角使用 roundRect
         shapeType = 'roundRect';
-        // PptxGenJS 的 rectRadius 会被内部放大，需要缩小输入值
-        const radiusRatio = shortSidePx > 0 ? radiusPx / shortSidePx : 0.1;
-        shapeStyles.rectRadius = Math.max(0.01, Math.min(radiusRatio / 1.44, 0.35));
+        // 使用与 addContainerElement 相同的计算方式
+        const rawRatio = radiusPx / shortSidePx;
+        shapeStyles.rectRadius = Math.max(0.01, Math.min(rawRatio, 0.5));
       }
     }
 
