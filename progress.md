@@ -1151,4 +1151,6 @@
 - PptxGenJS 圆角参考: https://gitbrent.github.io/PptxGenJS/docs/api-shapes/
 - 渐变限制: https://github.com/gitbrent/PptxGenJS/issues/102
 
-**下一步**: Git 提交并推送
+**Git 提交**: `45d4d9b` - fix: 使用 roundRect 形状类型实现圆角效果
+
+**下一步**: 用户测试验证圆角效果
