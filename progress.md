@@ -1153,4 +1153,60 @@
 
 **Git 提交**: `45d4d9b` - fix: 使用 roundRect 形状类型实现圆角效果
 
-**下一步**: 用户测试验证圆角效果
+---
+
+### [2024-12-25 22:00] - Session 15
+
+**当前功能**: 修复圆角、ellipse 和渐变解析问题
+
+**遇到的问题**:
+
+1. **圆形（ellipse）没有被识别**
+   - 原因: `addContainerElement` 没有检查正方形 + 大圆角应该使用 ellipse
+   - 导致: 100x100 的圆形被渲染为 roundRect
+
+2. **渐变矩形没有显示**
+   - 原因: 正则表达式 `/linear-gradient\(([^)]+)\)/` 在遇到 `rgb()` 中的 `)` 时停止
+   - 导致: `linear-gradient(rgb(16, 185, 129), rgb(5, 150, 105))` 只匹配到 `rgb(16, 185, 129`
+
+**解决方案**:
+
+1. **添加 ellipse 支持** (`PptGenerator.js`):
+   - 在 `addContainerElement()` 中检查元素是否为圆形
+   - 条件: 正方形（宽高差 < 2px）+ 圆角 >= 短边/2
+   - 满足条件时使用 `'ellipse'` 形状类型
+
+2. **修复渐变正则表达式** (`StyleConverter.js`):
+   - 将 `/linear-gradient\(([^)]+)\)/` 改为 `/linear-gradient\((.+)\)$/`
+   - 使用贪婪匹配到字符串末尾，正确处理嵌套括号
+
+**修改内容**:
+
+1. `src/core/PptGenerator.js`:
+   - `addContainerElement()`: 添加 ellipse 检测逻辑
+   - 检查 `isSquare` 和 `isFullRadius` 条件
+
+2. `src/core/StyleConverter.js`:
+   - `parseGradientFromStyle()`: 修复正则表达式
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- E2E 测试: ✅ 通过 (5/5)
+- 圆角测试: ✅ 通过
+  - roundRect 数量: 2（红色矩形 + 绿色渐变矩形）
+  - ellipse 数量: 1（黄色圆形）
+
+**验证的 XML 结构**:
+```xml
+<!-- roundRect 带圆角调整值 -->
+<a:prstGeom prst="roundRect">
+  <a:avLst><a:gd name="adj" fmla="val 86404"/></a:avLst>
+</a:prstGeom>
+
+<!-- ellipse 圆形 -->
+<a:prstGeom prst="ellipse">
+  <a:avLst></a:avLst>
+</a:prstGeom>
+```
+
+**下一步**: Git 提交并推送

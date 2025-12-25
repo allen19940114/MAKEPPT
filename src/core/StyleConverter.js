@@ -439,8 +439,8 @@ export class StyleConverter {
   parseGradientFromStyle(backgroundImage) {
     if (!backgroundImage || !backgroundImage.includes('gradient')) return null;
 
-    // 匹配 linear-gradient
-    const linearMatch = backgroundImage.match(/linear-gradient\(([^)]+)\)/);
+    // 匹配 linear-gradient - 使用贪婪匹配到字符串末尾，因为 rgb() 也包含括号
+    const linearMatch = backgroundImage.match(/linear-gradient\((.+)\)$/);
     if (linearMatch) {
       const parts = linearMatch[1];
 

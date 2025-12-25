@@ -707,16 +707,29 @@ export class PptGenerator {
         shapeOptions.shadow = shapeStyles.shadow;
       }
 
-      // 确定形状类型：有圆角使用 roundRect，否则使用 rect
+      // 确定形状类型：有圆角使用 roundRect，圆形使用 ellipse，否则使用 rect
       let shapeType = 'rect';
-      if (shapeStyles.rectRadius && shapeStyles.rectRadius > 0) {
-        shapeType = 'roundRect';
-        // rectRadius 在 PptxGenJS 中是 0-1 之间的比例值
-        // 计算圆角比例：圆角像素 / 较短边的一半
-        const shortSide = Math.min(position.w || 2, position.h || 1);
-        // 将英寸值转换为比例（相对于较短边）
-        const radiusRatio = Math.min(shapeStyles.rectRadius / (shortSide / 2), 1);
-        shapeOptions.rectRadius = Math.max(0.05, radiusRatio);
+      const radiusPx = this.styleConverter.parseBorderRadius(element.styles.borderRadius);
+
+      if (radiusPx > 0) {
+        // 检查是否为圆形：正方形 + 圆角 >= 宽度的一半
+        const width = element.position?.width || 0;
+        const height = element.position?.height || 0;
+        const isSquare = Math.abs(width - height) < 2; // 允许 2px 误差
+        const isFullRadius = radiusPx >= Math.min(width, height) / 2;
+
+        if (isSquare && isFullRadius) {
+          // 正方形 + 大圆角 = 圆形
+          shapeType = 'ellipse';
+        } else if (shapeStyles.rectRadius && shapeStyles.rectRadius > 0) {
+          shapeType = 'roundRect';
+          // rectRadius 在 PptxGenJS 中是 0-1 之间的比例值
+          // 计算圆角比例：圆角像素 / 较短边的一半
+          const shortSide = Math.min(position.w || 2, position.h || 1);
+          // 将英寸值转换为比例（相对于较短边）
+          const radiusRatio = Math.min(shapeStyles.rectRadius / (shortSide / 2), 1);
+          shapeOptions.rectRadius = Math.max(0.05, radiusRatio);
+        }
       }
 
       slide.addShape(shapeType, shapeOptions);
