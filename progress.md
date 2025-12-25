@@ -733,4 +733,59 @@
 - 代码测试: ✅ 通过 (49/49)
 - 浏览器测试: ✅ 通过 (5/5)
 
+**Git 提交**: `f90e279` - fix: 修复字体图标匹配错误问题
+
+**下一步**: 扩展 Material Symbols 图标支持
+
+---
+
+### [2024-12-25 22:30] - Session 16
+
+**当前功能**: 扩展 Material Symbols 图标支持
+
+**遇到的问题**:
+
+1. **很多图标显示为问号**
+   - 现象: 虽然图标能正确渲染，但很多图标显示为问号占位符
+   - 原因: 测试文件使用的是 **Material Symbols**（如 `material-symbols-outlined`），而不是 **Material Icons**
+   - 测试文件中使用的图标名称不在预定义的 `MATERIAL_ICON_PATHS` 中
+
+2. **Material Symbols vs Material Icons**
+   - Material Symbols 是 Google 更新的图标系统
+   - 使用不同的类名：`material-symbols-outlined`, `material-symbols-rounded`, `material-symbols-sharp`
+   - 图标名称和 SVG 路径与 Material Icons 类似但有差异
+
+**解决方案**:
+
+1. **更新 HtmlParser 支持 Material Symbols 类名**:
+   - 添加 `material-symbols-outlined`, `material-symbols-rounded`, `material-symbols-sharp` 到精确匹配列表
+
+2. **添加测试文件使用的图标 SVG 路径**:
+   - `account_tree`: 组织架构图标
+   - `agriculture`: 农业图标
+   - `arrow_downward`: 向下箭头
+   - `arrow_upward`: 向上箭头
+   - `dns`: DNS 服务器图标
+   - `health_and_safety`: 健康安全图标
+   - `html`: HTML 文件图标
+   - `inventory_2`: 库存图标
+   - `payments`: 支付图标
+   - `picture_as_pdf`: PDF 文件图标
+   - `precision_manufacturing`: 精密制造图标
+   - `rocket_launch`: 火箭发射图标
+   - `share_location`: 位置分享图标
+   - `train`: 火车图标
+
+**修改内容**:
+
+1. `src/core/HtmlParser.js`:
+   - `isIconElement()`: 添加 `material-symbols-rounded`, `material-symbols-sharp` 到精确匹配列表
+
+2. `src/core/HtmlToPptConverter.js`:
+   - `MATERIAL_ICON_PATHS`: 添加 14 个新的 Material Symbols 图标 SVG 路径
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- 浏览器测试: ✅ 通过 (5/5)
+
 **下一步**: Git 提交并推送

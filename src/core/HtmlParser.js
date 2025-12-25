@@ -331,7 +331,8 @@ export class HtmlParser {
     // 精确匹配的图标类名（必须完全匹配类名列表中的某一个）
     const exactIconClasses = [
       'fa', 'fas', 'far', 'fab', 'fal', 'fad',  // Font Awesome
-      'material-icons', 'material-icons-outlined', 'material-icons-round', 'material-icons-sharp', 'material-symbols-outlined',  // Material Icons
+      'material-icons', 'material-icons-outlined', 'material-icons-round', 'material-icons-sharp',
+      'material-symbols-outlined', 'material-symbols-rounded', 'material-symbols-sharp',  // Material Symbols
       'glyphicon', 'bi',  // Bootstrap Icons
       'feather', 'lucide', 'heroicon',  // 其他图标库
       'mdi', 'ion', 'ionicon', 'remixicon'  // 其他图标库
