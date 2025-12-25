@@ -257,14 +257,17 @@ export class HtmlParser {
         elementData.svgContent = svgChild.outerHTML;
         // 获取 SVG 的填充颜色
         elementData.iconColor = this.getSvgColor(svgChild) || this.extractComputedStyles(element).color;
+        elementData.isFontIcon = false;
       } else {
-        // 获取图标的颜色（用于后续渲染）
+        // 这是字体图标，标记为需要后续处理
+        // 实际的图片捕获在 HtmlToPptConverter.captureFontIcons 中进行
         elementData.iconColor = this.extractComputedStyles(element).color;
+        elementData.isFontIcon = true;
+        elementData.iconImageData = null; // 将在渲染阶段填充
       }
       // 清空图标元素的文本内容，防止字体图标文本（如 "car", "home"）被当作普通文本输出
       // Material Icons 等字体图标使用文本内容来显示图标，这些文本不应该出现在 PPT 中
       elementData.text = '';
-      elementData.isFontIcon = !svgChild; // 标记是否为字体图标
     }
 
     // 递归处理子元素

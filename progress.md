@@ -619,4 +619,62 @@
 - 代码测试: ✅ 通过 (49/49)
 - 浏览器测试: ✅ 通过 (5/5)
 
+**Git 提交**: `502b32a` - fix: 修复字体图标文本显示问题
+
+---
+
+### [2024-12-25 20:00] - Session 14
+
+**当前功能**: 实现字体图标渲染为图片嵌入 PPT
+
+**遇到的问题**:
+
+1. **字体图标在 PPT 中完全缺失**
+   - 现象: 虽然修复了图标文字问题，但图标本身也没有在 PPT 中显示
+   - 原因: 之前的修复只是清空了图标文本，并没有将图标渲染为图片
+   - 字体图标需要在浏览器中渲染后才能正确显示，无法直接转换为 PPT 格式
+
+**解决方案**:
+
+1. **HtmlToPptConverter 添加字体图标捕获功能**:
+   - 在 `renderAndParse()` 中增加字体加载等待（500ms + fonts.ready）
+   - 添加 `captureFontIcons()`: 递归遍历所有幻灯片元素
+   - 添加 `captureIconsInElements()`: 查找并捕获字体图标
+   - 添加 `renderFontIconToImage()`: 在渲染后的 DOM 中查找匹配的图标元素
+   - 添加 `isSameElement()`: 通过标签名、类名、位置匹配元素
+   - 添加 `captureElementToImage()`: 使用 Canvas 将图标渲染为 PNG
+
+2. **HtmlParser 标记字体图标**:
+   - 设置 `isFontIcon: true` 标记
+   - 初始化 `iconImageData: null`（在渲染阶段填充）
+
+3. **PptGenerator 使用图标图片**:
+   - 改进 `addIconElement()`: 如果有 `iconImageData`，作为图片添加到 PPT
+
+**修改内容**:
+
+1. `src/core/HtmlToPptConverter.js`:
+   - `renderAndParse()`: 增加字体加载等待，调用 `captureFontIcons()`
+   - 添加 `captureFontIcons()`: 遍历幻灯片捕获图标
+   - 添加 `captureIconsInElements()`: 递归处理元素
+   - 添加 `renderFontIconToImage()`: 查找并捕获图标
+   - 添加 `isSameElement()`: 元素匹配逻辑
+   - 添加 `captureElementToImage()`: Canvas 渲染为 PNG
+
+2. `src/core/HtmlParser.js`:
+   - `parseElement()`: 修改字体图标处理，标记 `isFontIcon`
+
+3. `src/core/PptGenerator.js`:
+   - `addIconElement()`: 使用 `iconImageData` 添加图片
+
+**验证结果**:
+- PPT 文件包含 12 个图片文件（PNG 和 SVG）
+- PPT 文本中不包含 "directions_car"、"home"、"settings" 等图标文字
+- PNG 图片有实际内容（48x48, 150x150, 443x176 等尺寸）
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- 浏览器测试: ✅ 通过 (5/5)
+- 视觉测试: ✅ 通过
+
 **下一步**: Git 提交并推送

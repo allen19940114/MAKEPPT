@@ -387,7 +387,7 @@ export class PptGenerator {
   }
 
   /**
-   * 添加图标元素（转换为 SVG 图片）
+   * 添加图标元素（转换为图片）
    * @param {Slide} slide - 幻灯片
    * @param {ElementData} element - 元素数据
    */
@@ -398,13 +398,36 @@ export class PptGenerator {
       return;
     }
 
-    // 对于字体图标，我们无法直接转换，跳过
-    // 但如果有位置信息，可以添加一个占位符形状
-    const position = this.calculatePosition(element.position);
-    if (position.w > 0.1 && position.h > 0.1) {
-      // 可选：添加一个圆形占位符表示图标位置
-      // 这里我们选择静默跳过，因为字体图标无法在 PPT 中正确显示
+    // 如果有捕获的字体图标图片，使用图片
+    if (element.iconImageData) {
+      const position = this.calculatePosition(element.position);
+
+      // 确保有合理的尺寸
+      let iconW = position.w > 0.2 ? position.w : 0.5;
+      let iconH = position.h > 0.2 ? position.h : 0.5;
+
+      // 图标通常是正方形的
+      if (iconW < 0.3) iconW = 0.4;
+      if (iconH < 0.3) iconH = 0.4;
+
+      try {
+        const imageOptions = {
+          x: position.x,
+          y: position.y,
+          w: iconW,
+          h: iconH,
+          data: element.iconImageData
+        };
+
+        slide.addImage(imageOptions);
+        return;
+      } catch (error) {
+        console.warn('Failed to add font icon image:', error);
+      }
     }
+
+    // 如果都失败了，静默跳过
+    // 字体图标无法在没有渲染的情况下正确显示
   }
 
   /**
