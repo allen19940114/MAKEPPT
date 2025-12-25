@@ -712,23 +712,25 @@ export class PptGenerator {
       const radiusPx = this.styleConverter.parseBorderRadius(element.styles.borderRadius);
 
       if (radiusPx > 0) {
-        // 检查是否为圆形：正方形 + 圆角 >= 宽度的一半
+        // 检查是否为圆形：正方形 + 圆角 >= 短边的 45%（接近 50%）
         const width = element.position?.width || 0;
         const height = element.position?.height || 0;
+        const shortSidePx = Math.min(width, height);
         const isSquare = Math.abs(width - height) < 2; // 允许 2px 误差
-        const isFullRadius = radiusPx >= Math.min(width, height) / 2;
+        // 更严格的圆形判断：圆角必须达到短边的 45% 以上
+        const isFullRadius = shortSidePx > 0 && radiusPx >= shortSidePx * 0.45;
 
         if (isSquare && isFullRadius) {
           // 正方形 + 大圆角 = 圆形
           shapeType = 'ellipse';
-        } else if (shapeStyles.rectRadius && shapeStyles.rectRadius > 0) {
+        } else {
+          // 有圆角使用 roundRect
           shapeType = 'roundRect';
           // rectRadius 在 PptxGenJS 中是 0-1 之间的比例值
-          // 计算圆角比例：圆角像素 / 较短边的一半
-          const shortSide = Math.min(position.w || 2, position.h || 1);
-          // 将英寸值转换为比例（相对于较短边）
-          const radiusRatio = Math.min(shapeStyles.rectRadius / (shortSide / 2), 1);
-          shapeOptions.rectRadius = Math.max(0.05, radiusRatio);
+          // 计算圆角比例：圆角像素 / 较短边像素的一半
+          const radiusRatio = shortSidePx > 0 ? Math.min(radiusPx / (shortSidePx / 2), 1) : 0.1;
+          // 最小圆角比例 0.01，最大 0.5（避免变成类圆形）
+          shapeOptions.rectRadius = Math.max(0.01, Math.min(radiusRatio, 0.5));
         }
       }
 
@@ -751,17 +753,21 @@ export class PptGenerator {
     const radiusPx = this.styleConverter.parseBorderRadius(element.styles.borderRadius);
 
     if (radiusPx > 0) {
-      if (element.position.width === element.position.height && radiusPx >= element.position.width / 2) {
+      const widthPx = element.position?.width || 0;
+      const heightPx = element.position?.height || 0;
+      const shortSidePx = Math.min(widthPx, heightPx);
+      const isSquare = Math.abs(widthPx - heightPx) < 2;
+      const isFullRadius = shortSidePx > 0 && radiusPx >= shortSidePx * 0.45;
+
+      if (isSquare && isFullRadius) {
         // 正方形 + 大圆角 = 圆形
         shapeType = 'ellipse';
       } else {
         // 有圆角使用 roundRect
         shapeType = 'roundRect';
-        // 计算圆角比例
-        const shortSide = Math.min(position.w || 1, position.h || 1);
-        const radiusInches = this.styleConverter.pxToInches(radiusPx);
-        const radiusRatio = Math.min(radiusInches / (shortSide / 2), 1);
-        shapeStyles.rectRadius = Math.max(0.05, radiusRatio);
+        // 计算圆角比例：圆角像素 / 较短边像素的一半
+        const radiusRatio = shortSidePx > 0 ? Math.min(radiusPx / (shortSidePx / 2), 1) : 0.1;
+        shapeStyles.rectRadius = Math.max(0.01, Math.min(radiusRatio, 0.5));
       }
     }
 
