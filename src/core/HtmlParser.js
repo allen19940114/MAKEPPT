@@ -210,10 +210,15 @@ export class HtmlParser {
       const style = window.getComputedStyle ?
         window.getComputedStyle(element) : element.style;
       const fontSize = parseFloat(style.fontSize) || 16;
-      // 粗略估算：每个字符约 0.6 * fontSize 宽度（考虑中英文混合）
-      const avgCharWidth = fontSize * 0.6;
-      rect.width = Math.min(text.length * avgCharWidth, 1600); // 最大宽度限制
-      rect.height = rect.height || fontSize * 1.5; // 行高约 1.5 倍
+      // 计算有效字符长度（中文字符计为 2，英文计为 1）
+      let effectiveLength = 0;
+      for (const char of text) {
+        effectiveLength += char.charCodeAt(0) > 127 ? 2 : 1;
+      }
+      // 粗略估算：每个有效字符单位约 0.5 * fontSize 宽度
+      const avgCharWidth = fontSize * 0.5;
+      rect.width = Math.min(effectiveLength * avgCharWidth, 1600); // 最大宽度限制
+      rect.height = rect.height || fontSize * 1.8; // 行高约 1.8 倍，更宽松
     }
 
     const elementData = {
@@ -420,6 +425,7 @@ export class HtmlParser {
       // 颜色
       color: this.normalizeColor(style.color),
       backgroundColor: this.normalizeColor(style.backgroundColor),
+      backgroundImage: style.backgroundImage,
 
       // 边框
       borderWidth: style.borderWidth,

@@ -80,22 +80,32 @@ export class StyleConverter {
    * @param {string} fontSize - CSS 字体大小
    * @returns {number} 点值
    */
-  parseFontSize(fontSize) {
+  parseFontSize(fontSize, applyScale = true) {
     if (!fontSize) return 18; // 默认 18pt
 
     const value = parseFloat(fontSize);
+    let points;
 
     if (fontSize.includes('px')) {
-      return this.pxToPoints(value);
+      points = this.pxToPoints(value);
     } else if (fontSize.includes('pt')) {
-      return value;
+      points = value;
     } else if (fontSize.includes('em') || fontSize.includes('rem')) {
-      return value * 16 * 0.75; // 假设 1em = 16px
+      points = value * 16 * 0.75; // 假设 1em = 16px
     } else if (fontSize.includes('%')) {
-      return (value / 100) * 16 * 0.75;
+      points = (value / 100) * 16 * 0.75;
+    } else {
+      points = value || 18;
     }
 
-    return value || 18;
+    // 应用缩放因子（如果需要）
+    if (applyScale && this.scale && this.scale !== 1) {
+      points = points * this.scale;
+    }
+
+    // 确保字体大小在合理范围内
+    // 最小 8pt 保证可读性，最大 72pt 避免过大
+    return Math.max(8, Math.min(points, 72));
   }
 
   /**
@@ -376,10 +386,20 @@ export class StyleConverter {
   convertShapeStyles(styles) {
     const config = {};
 
-    // 填充颜色
-    const bgColor = this.convertColor(styles.backgroundColor);
-    if (bgColor) {
-      config.fill = { color: bgColor };
+    // 优先检查渐变背景
+    if (styles.backgroundImage && styles.backgroundImage.includes('gradient')) {
+      const gradientData = this.parseGradientFromStyle(styles.backgroundImage);
+      if (gradientData) {
+        config.fill = gradientData;
+      }
+    }
+
+    // 如果没有渐变，使用纯色填充
+    if (!config.fill) {
+      const bgColor = this.convertColor(styles.backgroundColor);
+      if (bgColor) {
+        config.fill = { color: bgColor };
+      }
     }
 
     // 边框
@@ -394,10 +414,13 @@ export class StyleConverter {
       config.shadow = shadow;
     }
 
-    // 圆角
+    // 圆角 - 转换为英寸单位（PptxGenJS 需要英寸）
     const radius = this.parseBorderRadius(styles.borderRadius);
     if (radius > 0) {
-      config.rectRadius = radius;
+      // radius 是像素值，转换为英寸，并应用缩放
+      const radiusInches = this.pxToInches(radius);
+      // 限制最大圆角为 0.5 英寸
+      config.rectRadius = Math.min(radiusInches * (this.scale || 1), 0.5);
     }
 
     // 透明度
@@ -407,6 +430,76 @@ export class StyleConverter {
     }
 
     return config;
+  }
+
+  /**
+   * 从 CSS 背景样式解析渐变
+   * @param {string} backgroundImage - CSS backgroundImage 值
+   * @returns {Object|null} PptxGenJS 渐变配置
+   */
+  parseGradientFromStyle(backgroundImage) {
+    if (!backgroundImage || !backgroundImage.includes('gradient')) return null;
+
+    // 匹配 linear-gradient
+    const linearMatch = backgroundImage.match(/linear-gradient\(([^)]+)\)/);
+    if (linearMatch) {
+      const parts = linearMatch[1];
+
+      // 解析方向和颜色
+      let angle = 90; // 默认从左到右
+      const colors = [];
+
+      // 检查方向
+      if (parts.includes('to right')) {
+        angle = 90;
+      } else if (parts.includes('to left')) {
+        angle = 270;
+      } else if (parts.includes('to bottom')) {
+        angle = 180;
+      } else if (parts.includes('to top')) {
+        angle = 0;
+      } else if (parts.includes('to bottom right') || parts.includes('to right bottom')) {
+        angle = 135;
+      } else if (parts.includes('to top right') || parts.includes('to right top')) {
+        angle = 45;
+      } else {
+        // 尝试解析角度值
+        const angleMatch = parts.match(/(\d+)deg/);
+        if (angleMatch) {
+          angle = parseInt(angleMatch[1]);
+        }
+      }
+
+      // 解析颜色
+      const colorRegex = /(#[0-9A-Fa-f]{3,8}|rgba?\([^)]+\)|[a-zA-Z]+(?:\s+\d+)?)/g;
+      let match;
+      while ((match = colorRegex.exec(parts)) !== null) {
+        const colorStr = match[1].trim();
+        // 跳过方向关键词
+        if (['to', 'right', 'left', 'top', 'bottom', 'deg'].some(k => colorStr.includes(k))) {
+          continue;
+        }
+        const color = this.convertColor(colorStr);
+        if (color) {
+          colors.push({ color, position: colors.length === 0 ? 0 : 100 });
+        }
+      }
+
+      if (colors.length >= 2) {
+        // 均匀分布颜色位置
+        colors.forEach((c, i) => {
+          c.position = Math.round((i / (colors.length - 1)) * 100);
+        });
+
+        return {
+          type: 'linear',
+          rotate: angle,
+          stops: colors.map(c => ({ color: c.color, position: c.position }))
+        };
+      }
+    }
+
+    return null;
   }
 }
 

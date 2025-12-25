@@ -247,15 +247,23 @@ export class PptGenerator {
     const textStyles = this.styleConverter.convertTextStyles(element.styles);
     const shapeStyles = this.styleConverter.convertShapeStyles(element.styles);
 
-    // 获取原始字体大小（如果有的话）
+    // 获取字体大小（已经过缩放）
     let fontSize = textStyles.fontSize || this.options.defaultFontSize;
 
-    // 根据标题级别调整字号
+    // 根据标题级别调整字号（标题使用固定大小，也应用缩放）
     if (element.type === 'heading') {
       const level = parseInt(element.tagName?.replace('h', '') || '1');
       const headingSizes = { 1: 44, 2: 36, 3: 28, 4: 24, 5: 20, 6: 18 };
-      fontSize = headingSizes[level] || 24;
+      let baseSize = headingSizes[level] || 24;
+      // 应用缩放，但保持最小可读性
+      if (this.scale && this.scale !== 1) {
+        baseSize = Math.max(14, baseSize * this.scale);
+      }
+      fontSize = baseSize;
     }
+
+    // 确保字体大小在合理范围内
+    fontSize = Math.max(8, Math.min(fontSize, 72));
 
     // 计算合适的文本宽度
     let textWidth = position.w;
@@ -268,21 +276,28 @@ export class PptGenerator {
     }
 
     // 每个字符的平均宽度（英寸）- 基于字号
-    const avgCharWidthInches = fontSize / 72 * 0.55;
+    // 使用更准确的系数：0.65 适合中英文混合场景
+    const avgCharWidthInches = fontSize / 72 * 0.65;
 
     // 如果宽度太小或为0，根据文本内容估算合适的宽度
     if (textWidth <= 0.5) {
-      // 估算文本需要的宽度
-      const estimatedWidth = effectiveLength * avgCharWidthInches;
-      // 使用幻灯片宽度的 80% 作为最大宽度，确保文本有足够空间换行
-      const maxWidth = this.options.slideWidth * 0.8;
+      // 估算文本需要的宽度，增加 10% 余量防止换行
+      const estimatedWidth = effectiveLength * avgCharWidthInches * 1.1;
+      // 使用幻灯片宽度的 90% 作为最大宽度
+      const maxWidth = this.options.slideWidth * 0.9;
       textWidth = Math.min(estimatedWidth, maxWidth);
       textWidth = Math.max(textWidth, 2); // 最小宽度 2 英寸
+    } else {
+      // 即使有宽度，也要检查是否足够容纳文本
+      const requiredWidth = effectiveLength * avgCharWidthInches * 1.1;
+      if (textWidth < requiredWidth && requiredWidth < this.options.slideWidth * 0.9) {
+        textWidth = requiredWidth;
+      }
     }
 
     // 如果文本很长，确保宽度足够大以便换行
-    if (effectiveLength > 30 && textWidth < 4) {
-      textWidth = Math.min(this.options.slideWidth * 0.8, 8);
+    if (effectiveLength > 30 && textWidth < 5) {
+      textWidth = Math.min(this.options.slideWidth * 0.85, 10);
     }
 
     // 确保高度合理 - 基于字号和文本行数估算
@@ -671,21 +686,43 @@ export class PptGenerator {
     const position = this.calculatePosition(element.position);
     const shapeStyles = this.styleConverter.convertShapeStyles(element.styles);
 
-    // 如果容器有背景色或边框，添加一个形状
+    // 如果容器有背景色、渐变或边框，添加一个形状
     if (shapeStyles.fill || shapeStyles.line) {
       const shapeOptions = {
         x: position.x,
         y: position.y,
         w: position.w || 2,
-        h: position.h || 1,
-        ...shapeStyles
+        h: position.h || 1
       };
 
-      // 根据边框圆角决定形状类型
-      const radius = this.styleConverter.parseBorderRadius(element.styles.borderRadius);
-      if (radius > 0.5) {
-        // 圆角很大，使用圆角矩形
-        shapeOptions.rectRadius = Math.min(radius, 0.5);
+      // 处理填充 - 区分渐变和纯色
+      if (shapeStyles.fill) {
+        if (shapeStyles.fill.type === 'linear' && shapeStyles.fill.stops) {
+          // 渐变填充
+          shapeOptions.fill = {
+            type: 'solid',  // PptxGenJS 不直接支持渐变，使用第一个颜色
+            color: shapeStyles.fill.stops[0]?.color || '1e3a5f'
+          };
+          // 注意：PptxGenJS 对形状的渐变支持有限
+          // 可以尝试使用 fill.type = 'gradient' 但可能不稳定
+        } else {
+          shapeOptions.fill = shapeStyles.fill;
+        }
+      }
+
+      // 边框
+      if (shapeStyles.line) {
+        shapeOptions.line = shapeStyles.line;
+      }
+
+      // 圆角（已在 convertShapeStyles 中转换为英寸）
+      if (shapeStyles.rectRadius) {
+        shapeOptions.rectRadius = shapeStyles.rectRadius;
+      }
+
+      // 阴影
+      if (shapeStyles.shadow) {
+        shapeOptions.shadow = shapeStyles.shadow;
       }
 
       slide.addShape('rect', shapeOptions);

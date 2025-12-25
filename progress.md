@@ -883,3 +883,80 @@
 - payments, school, groups, translate, handshake
 
 **下一步**: Git 提交并推送
+
+---
+
+### [2024-12-25 18:00] - Session 10
+
+**当前功能**: 修复文本换行宽度问题 + 渐变圆角支持 + 资源分析功能
+
+**遇到的问题**:
+
+1. **文本框宽度不够导致错误换行**
+   - 原因: 中文字符宽度计算错误（使用 `text.length` 而非考虑中英文差异）
+   - 原因: 字符宽度系数偏小 (0.55)
+
+2. **渐变背景和圆角效果丢失**
+   - 原因: `extractComputedStyles` 没有提取 `backgroundImage`
+   - 原因: `convertShapeStyles` 只处理纯色背景，不处理渐变
+   - 原因: 圆角单位未转换为英寸
+
+3. **缺少资源分析功能**
+   - 用户希望看到 HTML 中用到的字体、图标等信息
+
+**解决方案**:
+
+1. **修复文本宽度计算** (`HtmlParser.js`, `PptGenerator.js`, `StyleConverter.js`):
+   - 中文字符计为 2 个单位，英文字符计为 1 个单位
+   - 字符宽度系数从 0.55 提高到 0.65
+   - 即使有宽度也检查是否足够容纳文本
+   - 增加 10% 余量防止意外换行
+   - 字体大小应用缩放因子，保持 8-72pt 范围
+
+2. **支持渐变背景和圆角** (`HtmlParser.js`, `StyleConverter.js`, `PptGenerator.js`):
+   - 提取 `backgroundImage` 样式
+   - 新增 `parseGradientFromStyle()` 解析 CSS 渐变
+   - 支持 `to right/left/top/bottom` 和角度方向
+   - 圆角转换为英寸单位并应用缩放
+   - 限制最大圆角为 0.5 英寸
+
+3. **资源分析功能** (`HtmlToPptConverter.js`, `index.js`, `index.html`, `main.css`):
+   - `analyzeResources()`: 分析 HTML 中的字体、图标、图片、颜色
+   - `extractFonts()`: 识别 Google Fonts、@font-face、内联样式、Tailwind 字体
+   - `extractIcons()`: 识别 Material Symbols、Font Awesome、Bootstrap Icons
+   - `extractImages()`: 统计外部图片、Blob、Data URL
+   - `extractColors()`: 提取颜色值和 Tailwind 颜色类
+   - UI 显示资源分析面板，支持折叠
+
+**修改内容**:
+
+1. `src/core/HtmlParser.js`:
+   - `parseElement()`: 中文字符宽度计为 2，英文计为 1
+   - `extractComputedStyles()`: 添加 `backgroundImage` 提取
+
+2. `src/core/StyleConverter.js`:
+   - `parseFontSize()`: 添加缩放因子支持，限制 8-72pt
+   - `convertShapeStyles()`: 支持渐变背景，圆角转英寸
+   - `parseGradientFromStyle()`: 新增方法，解析 CSS 渐变
+
+3. `src/core/PptGenerator.js`:
+   - `addTextElement()`: 改进宽度计算，增加余量
+   - `addContainerElement()`: 处理渐变填充
+
+4. `src/core/HtmlToPptConverter.js`:
+   - 新增资源分析相关方法 (6 个方法)
+
+5. `index.html`:
+   - 添加资源分析区域 `#resourcesSection`
+
+6. `src/styles/main.css`:
+   - 添加资源分析样式 (100+ 行)
+
+7. `src/index.js`:
+   - 添加资源分析元素引用和显示方法
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- 浏览器测试: 需要启动服务器
+
+**下一步**: Git 提交并推送

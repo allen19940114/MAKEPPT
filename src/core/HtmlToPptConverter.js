@@ -629,6 +629,319 @@ export class HtmlToPptConverter {
 
     return 'background-color: #ffffff;';
   }
+
+  /**
+   * 分析 HTML 中使用的资源（字体、图标等）
+   * @param {string} htmlString - HTML 内容
+   * @returns {Object} 资源分析结果
+   */
+  analyzeResources(htmlString) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlString, 'text/html');
+
+    return {
+      fonts: this.extractFonts(doc, htmlString),
+      icons: this.extractIcons(doc),
+      images: this.extractImages(doc),
+      colors: this.extractColors(doc)
+    };
+  }
+
+  /**
+   * 提取 HTML 中使用的字体
+   * @param {Document} doc - DOM 文档
+   * @param {string} htmlString - 原始 HTML 字符串
+   * @returns {Array<Object>} 字体列表
+   */
+  extractFonts(doc, htmlString) {
+    const fonts = new Map();
+
+    // 1. 从 CSS link 标签提取 Google Fonts
+    const links = doc.querySelectorAll('link[href*="fonts.googleapis.com"]');
+    links.forEach(link => {
+      const href = link.getAttribute('href');
+      const familyMatch = href.match(/family=([^&:]+)/);
+      if (familyMatch) {
+        const families = decodeURIComponent(familyMatch[1]).split('|');
+        families.forEach(family => {
+          const fontName = family.split(':')[0].replace(/\+/g, ' ');
+          if (!fonts.has(fontName)) {
+            fonts.set(fontName, {
+              name: fontName,
+              source: 'Google Fonts',
+              url: href,
+              usageCount: 0
+            });
+          }
+        });
+      }
+    });
+
+    // 2. 从 @font-face 规则提取自定义字体
+    const styleSheets = doc.querySelectorAll('style');
+    styleSheets.forEach(style => {
+      const fontFaceMatches = style.textContent.matchAll(/@font-face\s*\{[^}]*font-family:\s*['"]?([^'";]+)['"]?[^}]*\}/gi);
+      for (const match of fontFaceMatches) {
+        const fontName = match[1].trim();
+        if (!fonts.has(fontName)) {
+          fonts.set(fontName, {
+            name: fontName,
+            source: 'Custom (@font-face)',
+            usageCount: 0
+          });
+        }
+      }
+    });
+
+    // 3. 从内联样式提取 font-family
+    const allElements = doc.querySelectorAll('*');
+    allElements.forEach(el => {
+      const style = el.getAttribute('style');
+      if (style) {
+        const fontMatch = style.match(/font-family:\s*([^;]+)/i);
+        if (fontMatch) {
+          this.parseFontFamilyList(fontMatch[1], fonts);
+        }
+      }
+    });
+
+    // 4. 从 HTML 字符串中搜索 Tailwind 字体类
+    const tailwindFontClasses = {
+      'font-sans': 'System Sans-serif',
+      'font-serif': 'System Serif',
+      'font-mono': 'System Monospace'
+    };
+    Object.entries(tailwindFontClasses).forEach(([cls, name]) => {
+      if (htmlString.includes(cls)) {
+        if (!fonts.has(name)) {
+          fonts.set(name, {
+            name,
+            source: 'Tailwind CSS',
+            usageCount: (htmlString.match(new RegExp(cls, 'g')) || []).length
+          });
+        }
+      }
+    });
+
+    // 5. 统计字体使用次数
+    fonts.forEach((fontInfo, fontName) => {
+      const regex = new RegExp(fontName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+      fontInfo.usageCount = (htmlString.match(regex) || []).length;
+    });
+
+    return Array.from(fonts.values()).sort((a, b) => b.usageCount - a.usageCount);
+  }
+
+  /**
+   * 解析 font-family 列表
+   * @param {string} fontFamilyStr - font-family 字符串
+   * @param {Map} fonts - 字体 Map
+   */
+  parseFontFamilyList(fontFamilyStr, fonts) {
+    const families = fontFamilyStr.split(',').map(f => f.trim().replace(/['"]/g, ''));
+    families.forEach(family => {
+      if (family && !['inherit', 'initial', 'unset'].includes(family.toLowerCase())) {
+        if (!fonts.has(family)) {
+          fonts.set(family, {
+            name: family,
+            source: 'Inline Style',
+            usageCount: 1
+          });
+        } else {
+          fonts.get(family).usageCount++;
+        }
+      }
+    });
+  }
+
+  /**
+   * 提取 HTML 中使用的图标
+   * @param {Document} doc - DOM 文档
+   * @returns {Array<Object>} 图标列表
+   */
+  extractIcons(doc) {
+    const icons = [];
+    const iconSets = new Map();
+
+    // Material Symbols / Material Icons
+    const materialSelectors = [
+      '.material-symbols-outlined',
+      '.material-symbols-rounded',
+      '.material-symbols-sharp',
+      '.material-icons',
+      '.material-icons-outlined',
+      '.material-icons-round',
+      '.material-icons-sharp'
+    ];
+
+    materialSelectors.forEach(selector => {
+      const elements = doc.querySelectorAll(selector);
+      elements.forEach(el => {
+        const iconName = el.textContent.trim();
+        if (iconName) {
+          const setName = selector.replace('.', '');
+          icons.push({
+            name: iconName,
+            set: setName,
+            element: el.tagName.toLowerCase()
+          });
+
+          if (!iconSets.has(setName)) {
+            iconSets.set(setName, { count: 0, icons: new Set() });
+          }
+          iconSets.get(setName).count++;
+          iconSets.get(setName).icons.add(iconName);
+        }
+      });
+    });
+
+    // Font Awesome
+    const faElements = doc.querySelectorAll('[class*="fa-"]');
+    faElements.forEach(el => {
+      const classes = el.className.split(' ');
+      classes.forEach(cls => {
+        if (cls.startsWith('fa-') && !['fa-solid', 'fa-regular', 'fa-light', 'fa-thin', 'fa-duotone', 'fa-brands'].includes(cls)) {
+          const iconName = cls.replace('fa-', '');
+          const setType = classes.find(c => ['fas', 'far', 'fal', 'fat', 'fad', 'fab'].includes(c)) || 'fa';
+          icons.push({
+            name: iconName,
+            set: 'Font Awesome',
+            variant: setType
+          });
+
+          if (!iconSets.has('Font Awesome')) {
+            iconSets.set('Font Awesome', { count: 0, icons: new Set() });
+          }
+          iconSets.get('Font Awesome').count++;
+          iconSets.get('Font Awesome').icons.add(iconName);
+        }
+      });
+    });
+
+    // Bootstrap Icons
+    const biElements = doc.querySelectorAll('[class*="bi-"]');
+    biElements.forEach(el => {
+      const classes = el.className.split(' ');
+      classes.forEach(cls => {
+        if (cls.startsWith('bi-')) {
+          const iconName = cls.replace('bi-', '');
+          icons.push({
+            name: iconName,
+            set: 'Bootstrap Icons'
+          });
+
+          if (!iconSets.has('Bootstrap Icons')) {
+            iconSets.set('Bootstrap Icons', { count: 0, icons: new Set() });
+          }
+          iconSets.get('Bootstrap Icons').count++;
+          iconSets.get('Bootstrap Icons').icons.add(iconName);
+        }
+      });
+    });
+
+    return {
+      total: icons.length,
+      bySet: Array.from(iconSets.entries()).map(([name, data]) => ({
+        name,
+        count: data.count,
+        uniqueIcons: Array.from(data.icons)
+      })),
+      details: icons
+    };
+  }
+
+  /**
+   * 提取 HTML 中的图片
+   * @param {Document} doc - DOM 文档
+   * @returns {Array<Object>} 图片列表
+   */
+  extractImages(doc) {
+    const images = [];
+    const imgElements = doc.querySelectorAll('img');
+
+    imgElements.forEach(img => {
+      const src = img.getAttribute('src') || img.getAttribute('data-src');
+      if (src) {
+        images.push({
+          src: src.substring(0, 100) + (src.length > 100 ? '...' : ''),
+          alt: img.getAttribute('alt') || '',
+          isBlob: src.startsWith('blob:'),
+          isDataUrl: src.startsWith('data:'),
+          isExternal: src.startsWith('http')
+        });
+      }
+    });
+
+    // 背景图片
+    const allElements = doc.querySelectorAll('*');
+    allElements.forEach(el => {
+      const style = el.getAttribute('style');
+      if (style && style.includes('background-image')) {
+        const urlMatch = style.match(/url\(['"]?([^'")\s]+)['"]?\)/);
+        if (urlMatch) {
+          images.push({
+            src: urlMatch[1].substring(0, 100),
+            type: 'background-image',
+            isBlob: urlMatch[1].startsWith('blob:'),
+            isDataUrl: urlMatch[1].startsWith('data:'),
+            isExternal: urlMatch[1].startsWith('http')
+          });
+        }
+      }
+    });
+
+    return {
+      total: images.length,
+      external: images.filter(i => i.isExternal).length,
+      blob: images.filter(i => i.isBlob).length,
+      dataUrl: images.filter(i => i.isDataUrl).length,
+      details: images.slice(0, 20) // 只返回前 20 个
+    };
+  }
+
+  /**
+   * 提取 HTML 中使用的颜色
+   * @param {Document} doc - DOM 文档
+   * @returns {Array<Object>} 颜色列表
+   */
+  extractColors(doc) {
+    const colors = new Map();
+
+    // 从内联样式提取颜色
+    const allElements = doc.querySelectorAll('*');
+    allElements.forEach(el => {
+      const style = el.getAttribute('style');
+      if (style) {
+        // 匹配各种颜色格式
+        const colorMatches = style.matchAll(/(#[0-9A-Fa-f]{3,8}|rgba?\([^)]+\)|hsla?\([^)]+\))/g);
+        for (const match of colorMatches) {
+          const color = match[1];
+          if (!colors.has(color)) {
+            colors.set(color, { value: color, count: 0 });
+          }
+          colors.get(color).count++;
+        }
+      }
+
+      // Tailwind 颜色类
+      const className = el.className;
+      if (typeof className === 'string') {
+        const tailwindColorMatch = className.match(/(bg|text|border|from|to|via)-([a-z]+)-(\d+)/g);
+        if (tailwindColorMatch) {
+          tailwindColorMatch.forEach(cls => {
+            if (!colors.has(cls)) {
+              colors.set(cls, { value: cls, type: 'Tailwind', count: 0 });
+            }
+            colors.get(cls).count++;
+          });
+        }
+      }
+    });
+
+    return Array.from(colors.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 30); // 只返回前 30 个
+  }
 }
 
 export default HtmlToPptConverter;

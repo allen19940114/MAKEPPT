@@ -767,3 +767,141 @@ body {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
+
+/* ===== 资源分析区域 ===== */
+.resources-section {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 20px 30px;
+  box-shadow: var(--shadow-md);
+}
+
+.resources-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.resources-header h3 {
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.toggle-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+
+.toggle-btn:hover {
+  background: var(--bg-color);
+}
+
+.resources-content {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.resources-content.collapsed {
+  display: none;
+}
+
+.resource-group {
+  background: var(--bg-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.resource-group h4 {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.resource-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.resource-empty {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.resource-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+}
+
+.resource-tag.font {
+  border-color: #7C3AED;
+  color: #7C3AED;
+}
+
+.resource-tag.icon {
+  border-color: #F59E0B;
+  color: #F59E0B;
+}
+
+.resource-tag.image {
+  border-color: #10B981;
+  color: #10B981;
+}
+
+.resource-tag .count {
+  background: var(--bg-color);
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  margin-left: 4px;
+}
+
+.colors-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.color-swatch:hover {
+  transform: scale(1.2);
+}
+
+.color-swatch[title] {
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .resources-content {
+    grid-template-columns: 1fr;
+  }
+}

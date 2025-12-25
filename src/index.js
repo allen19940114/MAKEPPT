@@ -62,6 +62,15 @@ class App {
     this.logSection = document.getElementById('logSection');
     this.logContainer = document.getElementById('logContainer');
     this.logToggle = document.getElementById('logToggle');
+
+    // 资源分析区域
+    this.resourcesSection = document.getElementById('resourcesSection');
+    this.resourcesContent = document.getElementById('resourcesContent');
+    this.resourcesToggle = document.getElementById('resourcesToggle');
+    this.fontsList = document.getElementById('fontsList');
+    this.iconsList = document.getElementById('iconsList');
+    this.imagesList = document.getElementById('imagesList');
+    this.colorsList = document.getElementById('colorsList');
   }
 
   bindEvents() {
@@ -139,6 +148,14 @@ class App {
       });
     }
 
+    // 资源分析折叠
+    if (this.resourcesToggle) {
+      this.resourcesToggle.addEventListener('click', () => {
+        this.resourcesContent.classList.toggle('collapsed');
+        this.resourcesToggle.textContent = this.resourcesContent.classList.contains('collapsed') ? '展开' : '收起';
+      });
+    }
+
     // 幻灯片导航按钮
     if (this.prevSlideBtn) {
       this.prevSlideBtn.addEventListener('click', () => this.navigateSlide(-1));
@@ -205,6 +222,12 @@ class App {
       this.renderPreview();
       this.log('info', '预览渲染完成');
 
+      this.updateProgress(80, '分析资源...');
+
+      // 分析资源（字体、图标等）
+      this.analyzeAndDisplayResources(html);
+      this.log('info', '资源分析完成');
+
       this.updateProgress(100, '解析完成');
 
       // 显示相关区域
@@ -250,11 +273,12 @@ class App {
   showSections() {
     this.compareSection.style.display = 'block';
     this.previewSection.style.display = 'block';
+    this.resourcesSection.style.display = 'block';
     this.optionsSection.style.display = 'block';
     this.actionSection.style.display = 'flex';
 
     // 添加动画效果
-    [this.compareSection, this.previewSection, this.optionsSection, this.actionSection].forEach((section, index) => {
+    [this.compareSection, this.previewSection, this.resourcesSection, this.optionsSection, this.actionSection].forEach((section, index) => {
       section.classList.add('fade-in');
       section.style.animationDelay = `${index * 0.1}s`;
     });
@@ -695,6 +719,139 @@ class App {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  /**
+   * 分析并显示 HTML 资源
+   */
+  analyzeAndDisplayResources(html) {
+    try {
+      const resources = this.converter.analyzeResources(html);
+
+      // 显示字体
+      this.displayFonts(resources.fonts);
+
+      // 显示图标
+      this.displayIcons(resources.icons);
+
+      // 显示图片
+      this.displayImages(resources.images);
+
+      // 显示颜色
+      this.displayColors(resources.colors);
+
+      this.log('info', `字体: ${resources.fonts.length}, 图标: ${resources.icons.total}, 图片: ${resources.images.total}`);
+    } catch (error) {
+      this.log('warning', `资源分析出错: ${error.message}`);
+    }
+  }
+
+  /**
+   * 显示字体列表
+   */
+  displayFonts(fonts) {
+    if (!this.fontsList) return;
+
+    if (fonts.length === 0) {
+      this.fontsList.innerHTML = '<span class="resource-empty">未检测到特殊字体</span>';
+      return;
+    }
+
+    this.fontsList.innerHTML = fonts.map(font => `
+      <span class="resource-tag font" title="${font.source}">
+        ${this.escapeHtml(font.name)}
+        ${font.usageCount > 1 ? `<span class="count">${font.usageCount}</span>` : ''}
+      </span>
+    `).join('');
+  }
+
+  /**
+   * 显示图标列表
+   */
+  displayIcons(icons) {
+    if (!this.iconsList) return;
+
+    if (icons.total === 0) {
+      this.iconsList.innerHTML = '<span class="resource-empty">未检测到图标</span>';
+      return;
+    }
+
+    // 按图标集分组显示
+    const html = icons.bySet.map(set => `
+      <span class="resource-tag icon" title="${set.uniqueIcons.slice(0, 10).join(', ')}${set.uniqueIcons.length > 10 ? '...' : ''}">
+        ${this.escapeHtml(set.name)}
+        <span class="count">${set.count}</span>
+      </span>
+    `).join('');
+
+    this.iconsList.innerHTML = html || '<span class="resource-empty">未检测到图标</span>';
+  }
+
+  /**
+   * 显示图片统计
+   */
+  displayImages(images) {
+    if (!this.imagesList) return;
+
+    if (images.total === 0) {
+      this.imagesList.innerHTML = '<span class="resource-empty">未检测到图片</span>';
+      return;
+    }
+
+    const parts = [];
+    if (images.external > 0) parts.push(`<span class="resource-tag image">外部图片 <span class="count">${images.external}</span></span>`);
+    if (images.blob > 0) parts.push(`<span class="resource-tag image">Blob 图片 <span class="count">${images.blob}</span></span>`);
+    if (images.dataUrl > 0) parts.push(`<span class="resource-tag image">内嵌图片 <span class="count">${images.dataUrl}</span></span>`);
+
+    this.imagesList.innerHTML = parts.join('') || `<span class="resource-tag image">共 ${images.total} 张图片</span>`;
+  }
+
+  /**
+   * 显示颜色列表
+   */
+  displayColors(colors) {
+    if (!this.colorsList) return;
+
+    if (colors.length === 0) {
+      this.colorsList.innerHTML = '<span class="resource-empty">未检测到颜色</span>';
+      return;
+    }
+
+    // Tailwind 颜色映射（常用的）
+    const tailwindColors = {
+      'slate': { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1', 400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#334155', 800: '#1e293b', 900: '#0f172a' },
+      'blue': { 50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd', 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8f' },
+      'red': { 50: '#fef2f2', 100: '#fee2e2', 200: '#fecaca', 300: '#fca5a5', 400: '#f87171', 500: '#ef4444', 600: '#dc2626', 700: '#b91c1c', 800: '#991b1b', 900: '#7f1d1d' },
+      'green': { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d' },
+      'yellow': { 50: '#fefce8', 100: '#fef9c3', 200: '#fef08a', 300: '#fde047', 400: '#facc15', 500: '#eab308', 600: '#ca8a04', 700: '#a16207', 800: '#854d0e', 900: '#713f12' },
+      'white': { base: '#ffffff' },
+      'black': { base: '#000000' }
+    };
+
+    this.colorsList.innerHTML = colors.slice(0, 20).map(color => {
+      let bgColor = color.value;
+      let displayTitle = color.value;
+
+      // 如果是 Tailwind 类名，尝试转换为实际颜色
+      if (color.type === 'Tailwind') {
+        const match = color.value.match(/(bg|text|border|from|to|via)-(\w+)-(\d+)/);
+        if (match) {
+          const [, , colorName, shade] = match;
+          if (tailwindColors[colorName] && tailwindColors[colorName][shade]) {
+            bgColor = tailwindColors[colorName][shade];
+          }
+        }
+      }
+
+      // 检查是否是有效的颜色值
+      const isValidColor = bgColor.startsWith('#') || bgColor.startsWith('rgb') || bgColor.startsWith('hsl');
+
+      if (isValidColor) {
+        return `<div class="color-swatch" style="background-color: ${bgColor}" title="${displayTitle} (×${color.count})"></div>`;
+      } else {
+        return `<span class="resource-tag" title="×${color.count}">${this.escapeHtml(color.value)}</span>`;
+      }
+    }).join('');
   }
 }
 
