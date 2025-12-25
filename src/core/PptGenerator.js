@@ -199,8 +199,12 @@ export class PptGenerator {
         this.addShapeElement(slide, element);
         break;
       case 'icon':
-        // 跳过图标元素 - 字体图标在 PPT 中无法正确显示
-        // 只处理子元素（如果有的话）
+        // 尝试将图标转换为图片添加到 PPT
+        this.addIconElement(slide, element);
+        break;
+      case 'svg':
+        // 将 SVG 转换为图片添加到 PPT
+        this.addSvgElement(slide, element);
         break;
       default:
         // 默认作为文本处理，但要过滤掉可能的图标字符
@@ -367,6 +371,100 @@ export class PptGenerator {
     }
 
     return false;
+  }
+
+  /**
+   * 添加图标元素（转换为 SVG 图片）
+   * @param {Slide} slide - 幻灯片
+   * @param {ElementData} element - 元素数据
+   */
+  addIconElement(slide, element) {
+    // 如果图标包含 SVG，使用 SVG 渲染
+    if (element.svgContent) {
+      this.addSvgElement(slide, element);
+      return;
+    }
+
+    // 对于字体图标，我们无法直接转换，跳过
+    // 但如果有位置信息，可以添加一个占位符形状
+    const position = this.calculatePosition(element.position);
+    if (position.w > 0.1 && position.h > 0.1) {
+      // 可选：添加一个圆形占位符表示图标位置
+      // 这里我们选择静默跳过，因为字体图标无法在 PPT 中正确显示
+    }
+  }
+
+  /**
+   * 添加 SVG 元素（转换为 base64 图片）
+   * @param {Slide} slide - 幻灯片
+   * @param {ElementData} element - 元素数据
+   */
+  addSvgElement(slide, element) {
+    if (!element.svgContent) return;
+
+    const position = this.calculatePosition(element.position);
+
+    // 确保有合理的尺寸
+    let svgW = position.w > 0.2 ? position.w : 0.5;
+    let svgH = position.h > 0.2 ? position.h : 0.5;
+
+    // 图标通常是正方形的
+    if (svgW < 0.3) svgW = 0.4;
+    if (svgH < 0.3) svgH = 0.4;
+
+    try {
+      // 将 SVG 转换为 base64 data URI
+      const svgBase64 = this.svgToBase64(element.svgContent, element.iconColor);
+
+      const imageOptions = {
+        x: position.x,
+        y: position.y,
+        w: svgW,
+        h: svgH,
+        data: svgBase64
+      };
+
+      slide.addImage(imageOptions);
+    } catch (error) {
+      console.warn('Failed to add SVG element:', error);
+    }
+  }
+
+  /**
+   * 将 SVG 内容转换为 base64 data URI
+   * @param {string} svgContent - SVG 内容
+   * @param {string} color - 可选的颜色覆盖
+   * @returns {string} base64 data URI
+   */
+  svgToBase64(svgContent, color) {
+    let svg = svgContent;
+
+    // 确保 SVG 有 xmlns 属性
+    if (!svg.includes('xmlns')) {
+      svg = svg.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+    }
+
+    // 如果提供了颜色，尝试应用到 SVG
+    if (color && color !== 'transparent') {
+      // 添加 fill 属性（如果没有的话）
+      if (!svg.includes('fill=')) {
+        svg = svg.replace('<svg', `<svg fill="${color}"`);
+      }
+    }
+
+    // 确保 SVG 有合理的尺寸（如果没有设置的话）
+    if (!svg.includes('width=') && !svg.includes('viewBox')) {
+      svg = svg.replace('<svg', '<svg width="24" height="24"');
+    }
+
+    // 转换为 base64（使用现代方法替代弃用的 unescape）
+    const utf8Bytes = new TextEncoder().encode(svg);
+    let binaryString = '';
+    for (const byte of utf8Bytes) {
+      binaryString += String.fromCharCode(byte);
+    }
+    const base64 = btoa(binaryString);
+    return `data:image/svg+xml;base64,${base64}`;
   }
 
   /**

@@ -435,4 +435,49 @@
 - 代码测试: ✅ 通过 (49/49)
 - 浏览器测试: ✅ 通过 (5/5)
 
+**Git 提交**: `e26e452` - fix: 修复PPT文本边框、图标显示和换行问题
+
+---
+
+### [2024-12-25 16:00] - Session 10
+
+**当前功能**: 修复 SVG 图标转换为图片嵌入 PPT
+
+**遇到的问题**:
+
+1. **图标被跳过而非转换**
+   - 原因: 之前的修复直接跳过了图标元素
+   - 用户期望: 图标应该以图片或 SVG 形式保留在 PPT 中
+
+**解决方案**:
+
+1. **HtmlParser 提取 SVG 内容**:
+   - 对于 `<svg>` 元素，提取 `outerHTML` 作为 `svgContent`
+   - 对于图标元素，查找内部的 `<svg>` 子元素
+   - 保存图标颜色 `iconColor` 用于 SVG 填充
+
+2. **PptGenerator 添加 SVG 处理**:
+   - 添加 `addIconElement()`: 处理图标元素
+   - 添加 `addSvgElement()`: 将 SVG 转换为 base64 图片添加到 PPT
+   - 添加 `svgToBase64()`: 将 SVG 内容转换为 data URI
+     - 确保 SVG 有 `xmlns` 属性
+     - 应用图标颜色到 `fill` 属性
+     - 使用 TextEncoder 替代弃用的 `unescape`
+
+**修改内容**:
+
+1. `src/core/HtmlParser.js`:
+   - `parseElement()`: 对 SVG 元素提取 `svgContent`
+   - 对图标元素查找内部 SVG 并提取
+
+2. `src/core/PptGenerator.js`:
+   - `addElement()`: 添加 'icon' 和 'svg' 类型处理
+   - 添加 `addIconElement()`: 处理图标转图片
+   - 添加 `addSvgElement()`: SVG 转 base64 图片
+   - 添加 `svgToBase64()`: SVG 到 data URI 转换
+
+**测试结果**:
+- 代码测试: ✅ 通过 (49/49)
+- 浏览器测试: ✅ 通过 (5/5)
+
 **下一步**: Git 提交并推送

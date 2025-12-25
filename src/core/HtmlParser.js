@@ -242,6 +242,20 @@ export class HtmlParser {
       elementData.tableData = this.parseTable(element);
     } else if (tagName === 'ul' || tagName === 'ol') {
       elementData.listData = this.parseList(element);
+    } else if (tagName === 'svg') {
+      // 提取 SVG 内容用于转换为图片
+      elementData.svgContent = element.outerHTML;
+      elementData.type = 'svg';
+    }
+
+    // 如果是图标元素，尝试提取 SVG 或图标信息
+    if (elementData.type === 'icon') {
+      const svgChild = element.querySelector('svg');
+      if (svgChild) {
+        elementData.svgContent = svgChild.outerHTML;
+      }
+      // 获取图标的颜色（用于后续渲染）
+      elementData.iconColor = this.extractComputedStyles(element).color;
     }
 
     // 递归处理子元素
